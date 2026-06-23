@@ -1,14 +1,19 @@
 <div align="center">
 
-<div align="center">
   <img src="assets/screenshots/landing.webp" width="100%" alt="ClearPath OS" />
   
   <br/>
   <br/>
 
-  <h1>ClearPath OS</h1>
+  <h1>ClearPath OS</h1> 
   <p><strong>Enterprise-Grade Municipal Traffic Intelligence Platform</strong></p>
   <p><em>Shifting city infrastructure from volume-based routing to context-aware empathy.</em></p>
+
+  <br/>
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-black?style=for-the-badge&logo=vercel)](https://clear-path-os-apoorva-pandeys-projects-14145643.vercel.app)
+[![API](https://img.shields.io/badge/Backend%20API-Render-46E3B7?style=for-the-badge&logo=render)](https://clearpath-backend-ebjx.onrender.com)
+
 </div>
 
 **Enterprise-Grade Municipal Traffic Intelligence Platform**
@@ -26,7 +31,6 @@ _Shifting city infrastructure from volume-based routing to context-aware empathy
 ![Spline](https://img.shields.io/badge/Spline-3D-blueviolet?style=flat-square)
 
 </div>
->  **Live Demo:** [clear-path-os.vercel.app](https://clear-path-os-apoorva-pandeys-projects-14145643.vercel.app)
 
 ---
 
