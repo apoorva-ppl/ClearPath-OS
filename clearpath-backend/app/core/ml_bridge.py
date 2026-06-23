@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # clearpath-os-dist is a SIBLING of this project (clearpath-backend), not
 # a subpackage. We resolve its path relative to this file and add it to
 # sys.path so `from src.pipeline import ...` resolves correctly.
-_DIST_ROOT = Path(__file__).resolve().parents[3] / "clearpath-os-dist"
+_DIST_ROOT = Path(__file__).resolve().parents[2] / "clearpath-os-dist"
 
 if str(_DIST_ROOT) not in sys.path:
     sys.path.insert(0, str(_DIST_ROOT))

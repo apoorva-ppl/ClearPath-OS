@@ -34,11 +34,13 @@ from .optimize_resources import allocate
 from .route_diversion import build_graph, reroute
 from .directive_llm import generate_directive
 from .utils import load_config, resolve, log
+from pathlib import Path
 
 LEVEL_NAME = {0: "Low", 1: "Medium", 2: "High"}
 
 
 # ----------------------------------------------------------- artifact load ----
+BASE_DIR = Path(__file__).resolve().parent.parent
 def load_artifacts(cfg: dict | None = None) -> dict:
     cfg = cfg or load_config()
     sev = lgb.Booster(model_file=str(resolve(cfg["paths"]["severity_model"])))
