@@ -1,13 +1,15 @@
 <div align="center">
 
-```
- ██████╗██╗     ███████╗ █████╗ ██████╗ ██████╗  █████╗ ████████╗██╗  ██╗     ██████╗ ███████╗
-██╔════╝██║     ██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝██║  ██║    ██╔═══██╗██╔════╝
-██║     ██║     █████╗  ███████║██████╔╝██████╔╝███████║   ██║   ███████║    ██║   ██║███████╗
-██║     ██║     ██╔══╝  ██╔══██║██╔══██╗██╔═══╝ ██╔══██║   ██║   ██╔══██║    ██║   ██║╚════██║
-╚██████╗███████╗███████╗██║  ██║██║  ██║██║     ██║  ██║   ██║   ██║  ██║    ╚██████╔╝███████║
- ╚═════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝     ╚═════╝ ╚══════╝
-```
+<div align="center">
+  <img src="assets/screenshots/landing.webp" width="100%" alt="ClearPath OS" />
+  
+  <br/>
+  <br/>
+
+  <h1>ClearPath OS</h1>
+  <p><strong>Enterprise-Grade Municipal Traffic Intelligence Platform</strong></p>
+  <p><em>Shifting city infrastructure from volume-based routing to context-aware empathy.</em></p>
+</div>
 
 **Enterprise-Grade Municipal Traffic Intelligence Platform**
 
@@ -73,7 +75,7 @@ INCIDENT DETECTED
 
 ### Landing Page
 
-![Landing Page](assets/screenshots/landing)
+![Landing Page](assets/screenshots/landing.webp)
 
 ### God Mode — Live Map
 
@@ -117,7 +119,7 @@ The command entry point for Bengaluru Traffic Police dispatchers.
 - Direct CTAs routing dispatchers to God Mode or the Intelligence dashboard
 - Navigation links to all six platform modules
 
-![Landing Page](assets/screenshots/landing)
+![Landing Page](assets/screenshots/landing.webp)
 
 ---
 
