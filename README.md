@@ -73,35 +73,35 @@ INCIDENT DETECTED
 
 ### Landing Page
 
-![Landing Page](assets/screenshots/landing.png)
+![Landing Page](assets/screenshots/landing)
 
 ### God Mode — Live Map
 
-![God Mode Live Map](assets/screenshots/god_mode_live.png)
+![God Mode Live Map](assets/screenshots/live_mode.webp)
 
 ### God Mode — Simulate
 
-![God Mode Simulate](assets/screenshots/god_mode_simulate.png)
+![God Mode Simulate](assets/screenshots/simulate.webp)
 
 ### God Mode — Stress Test
 
-![God Mode Stress Test](assets/screenshots/god_mode_stress.png)
+![God Mode Stress Test](assets/screenshots/stress.webp)
 
 ### Sentinel — Complaint Forum
 
-![Sentinel](assets/screenshots/sentinel.png)
+![Sentinel](assets/screenshots/sentinel.webp)
 
 ### Intelligence Page
 
-![Intelligence](assets/screenshots/intelligence.png)
+![Intelligence](assets/screenshots/intelligence.webp)
 
 ### Debrief Page
 
-![Debrief](assets/screenshots/debrief.png)
+![Debrief](assets/screenshots/debrief.webp)
 
 ### Vulnerable Zone Mode
 
-![Vulnerable Zones](assets/screenshots/vulnerable.png)
+![Vulnerable Zones](assets/screenshots/vulnerable.webp)
 
 ---
 
@@ -117,7 +117,7 @@ The command entry point for Bengaluru Traffic Police dispatchers.
 - Direct CTAs routing dispatchers to God Mode or the Intelligence dashboard
 - Navigation links to all six platform modules
 
-![Landing Page](assets/screenshots/landing.png)
+![Landing Page](assets/screenshots/landing)
 
 ---
 
@@ -136,7 +136,7 @@ Real-time ingestion of city traffic telemetry streamed over WebSocket.
 - Station Status panel listing all 54 stations and unit counts
 - Live feed sidebar showing incident IDs, types, and corridor tags in real time
 
-![God Mode Live](assets/screenshots/god_mode_live.png)
+![God Mode Live](assets/screenshots/live_mode.webp)
 
 #### Simulate — Urban Architect Mode
 
@@ -149,7 +149,7 @@ Lets civic planners place infrastructure assets and model their impact before co
 - Holographic skyline visualization rendering placed assets as 3D columns
 - City Health Score computed as assets are placed
 
-![God Mode Simulate](assets/screenshots/god_mode_simulate.png)
+![God Mode Simulate](assets/screenshots/simulate.webp)
 
 #### Stress Test
 
@@ -162,7 +162,7 @@ Push the ML model to failure by simulating cascading multi-ward gridlocks.
 - Plan Output cards: per-incident closure probability, officer count, barricades required
 - Agent pipeline tracks TRIAGE through COMPLETE with live status on each stage
 
-![God Mode Stress Test](assets/screenshots/god_mode_stress.png)
+![God Mode Stress Test](assets/screenshots/stress.webp)
 
 ---
 
@@ -179,7 +179,7 @@ Crowdsourced telemetry pipeline for hyper-local anomalies that sensors miss. Bil
 - Scan interval: 10 seconds
 - Recent submissions feed showing verified and pending reports
 
-![Sentinel](assets/screenshots/sentinel.png)
+![Sentinel](assets/screenshots/sentinel.webp)
 
 ---
 
@@ -219,7 +219,7 @@ Palantir-style high-density telemetry dashboard. The operational heart of ClearP
 
 - Ranked corridors by active incident count: NON-CORRIDOR 63, ORR EAST 1: 13, BELLARY ROAD 1: 11...
 
-![Intelligence](assets/screenshots/intelligence.png)
+![Intelligence](assets/screenshots/intelligence.webp)
 
 ---
 
@@ -237,7 +237,7 @@ We don't hide the algorithm's mistakes. We surface every single one.
 - Anomaly Detection: 23 anomalies detected, with progress bar showing detection coverage
 - Drift Gauge visualization showing current model drift severity
 
-![Debrief](assets/screenshots/debrief.png)
+![Debrief](assets/screenshots/debrief.webp)
 
 ---
 
@@ -255,7 +255,7 @@ This page is not a dashboard. It is a statement.
 - Incident types surface real civic impact — not just road data. A tree fall near a school during pickup hours. Pot holes blocking an ambulance corridor. The system names who is affected.
 - Emotional design intent: warm amber and red tones, large typography, no technical jargon in the descriptions — built for a dispatcher making a human call in under 10 seconds
 
-![Vulnerable Zones](assets/screenshots/vulnerable.png)
+![Vulnerable Zones](assets/screenshots/vulnerable.webp)
 
 ---
 
