@@ -18,10 +18,11 @@ _Shifting city infrastructure from volume-based routing to context-aware empathy
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Next.js](https://img.shields.io/badge/Next.js-black?style=flat-square&logo=next.js&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
 ![LightGBM](https://img.shields.io/badge/LightGBM-enabled-orange?style=flat-square)
 ![PostGIS](https://img.shields.io/badge/PostGIS-spatial-336791?style=flat-square&logo=postgresql&logoColor=white)
-![License: MIT](https://img.shields.io/badge/license-MIT-yellow?style=flat-square)
+![Spline](https://img.shields.io/badge/Spline-3D-blueviolet?style=flat-square)
 
 </div>
 
@@ -33,179 +34,332 @@ _Shifting city infrastructure from volume-based routing to context-aware empathy
 
 ---
 
-## 📖 Table of Contents
+## Table of Contents
 
-- [The Core Philosophy](#-the-core-philosophy--geospatial-empathy)
-- [Live System Overview](#-live-system-overview)
-- [Platform Modules](#-platform-modules)
-- [Technical Stack](#-technical-stack)
-- [Local Installation](#-local-installation)
-- [Model Accountability](#-model-accountability--the-debrief-protocol)
-- [Team](#-team)
+- [Philosophy](#philosophy)
+- [Screenshots](#screenshots)
+- [Pages and Features](#pages-and-features)
+- [Project Structure](#project-structure)
+- [Tech Stack](#tech-stack)
+- [Local Installation](#local-installation)
 
 ---
 
-## 🌍 The Core Philosophy — Geospatial Empathy
+## Philosophy
 
-Standard traffic AI has a fatal flaw: it optimizes for **vehicle volume**. It will prioritize clearing a highway with 5,000 delayed commuters over a side-street with 50 delayed cars.
+Standard traffic AI has a fatal flaw: it optimizes for **vehicle volume**. It will clear a highway with 5,000 delayed commuters before a side-street with 50 — but if those 50 cars are blocking the only exit to a burning school, or the entrance to a trauma hospital, the AI's math fails human reality.
 
-But if those 50 cars are blocking the only exit to a burning school — or the entrance to a trauma hospital — the AI's math fails human reality.
+**ClearPath OS introduces Geospatial Empathy.**
 
-### The Override Protocol
+Before the LightGBM model assigns any severity score, our backend runs a PostGIS spatial radius query. If a minor breakdown occurs within **500 meters** of a Vulnerable Zone — hospital, school, fire station — the system overrides the AI, escalates to `CRITICAL`, and dispatches response before emergency vehicles arrive.
 
 ```
 INCIDENT DETECTED
-      │
-      ▼
-┌─────────────────────────────────────────┐
-│  PostGIS Spatial Radius Query (500m)    │
-│  Checking proximity to Vulnerable Zones │
-└─────────────────────────────────────────┘
-      │
-      ├── VULNERABLE ZONE NEARBY? ──YES──▶  [ CRITICAL ] Override
-      │                                      Deploy tow response NOW
-      │                                      Flag emergency corridor
-      │
-      └── NO ──▶  LightGBM Severity Score
-                  Standard dispatch queue
-```
-
-Before the ML model assigns any severity score, our backend executes a rapid **PostGIS spatial radius query**. If a minor breakdown occurs within **500 meters** of a Vulnerable Zone (Hospitals, High-Density Coaching Hubs, Fire Stations), the system mathematically overrides the AI — elevating the incident to `[ CRITICAL ]` and dispatching response _before_ emergency vehicles arrive.
-
----
-
-## 🚦 Live System Overview
-
-| Metric                     | Value                               |
-| -------------------------- | ----------------------------------- |
-| Model Confidence (ROC-AUC) | `94.2%`                             |
-| Duration Prediction MAE    | `± 3.4 min`                         |
-| Vulnerable Zone Radius     | `500 m`                             |
-| Incident Severity Tiers    | `CRITICAL / ELEVATED / MONITOR`     |
-| Data Ingestion             | Real-time + Crowdsourced (Sentinel) |
-
----
-
-## ⚙️ Platform Modules
-
-### `MODULE_01` — Command Entry _(Landing & Executive Overview)_
-
-The entry point of ClearPath OS. A high-performance interface providing a macroscopic view of city health, active municipal alerts, and system status. Designed for rapid situational awareness at a glance.
-
----
-
-### `MODULE_02` — Mission Briefing _(Intro Video)_
-
-A 2-minute architectural breakdown and mission statement detailing how ClearPath OS intercepts data and transforms it into actionable municipal dispatches.
-
----
-
-### `MODULE_03` — God Mode 🔴 _(The Simulation Engine)_
-
-Designed for civic planners. God Mode allows users to manipulate the city's traffic matrix in real-time.
-
-| Feature         | Description                                                                   |
-| --------------- | ----------------------------------------------------------------------------- |
-| **Live Map**    | Real-time ingestion of active city telemetry and vehicle flow                 |
-| **Simulate**    | Inject hypothetical bottlenecks (e.g., _"Tree Fall on Outer Ring Road"_)      |
-| **Stress Test** | Simulate cascading multi-ward gridlocks to find municipal response thresholds |
-
----
-
-### `MODULE_04` — Sentinel 🟢 _(Crowdsourced Telemetry)_
-
-A crowdsourced telemetry ingestion pipeline. Citizens report hyper-local anomalies — water-logging, broken-down trucks — that traditional sensors miss entirely. The system cross-verifies reports against live model predictions to filter noise.
-
-```
-Citizen Report ──▶ Sentinel Ingestion ──▶ Cross-verify vs. LightGBM ──▶ Validate / Discard
+      |
+      v
+ PostGIS Spatial Query (500m radius)
+      |
+      |-- VULNERABLE ZONE NEARBY? --YES--> [ CRITICAL ] Override
+      |                                     Deploy tow response immediately
+      |                                     Flag emergency corridor
+      |
+      +-- NO --> LightGBM Severity Score
+                 Standard dispatch queue
 ```
 
 ---
 
-### `MODULE_05` — Intelligence 🔵 _(The Control Room)_
+## Screenshots
 
-The operational heart of the platform. A Palantir-style, high-density telemetry dashboard built for human dispatchers.
+### Landing Page
 
-- Live **LightGBM inference streams** and active corridor predictions
-- Dynamic **severity badging** with color-coded priority tiers
-- Real-time **precision/recall metrics** (ROC-AUC) — dispatchers always know the AI's exact confidence level
+![Landing Page](assets/screenshots/landing.png)
+
+### God Mode — Live Map
+
+![God Mode Live Map](assets/screenshots/god_mode_live.png)
+
+### God Mode — Simulate
+
+![God Mode Simulate](assets/screenshots/god_mode_simulate.png)
+
+### God Mode — Stress Test
+
+![God Mode Stress Test](assets/screenshots/god_mode_stress.png)
+
+### Sentinel — Complaint Forum
+
+![Sentinel](assets/screenshots/sentinel.png)
+
+### Intelligence Page
+
+![Intelligence](assets/screenshots/intelligence.png)
+
+### Debrief Page
+
+![Debrief](assets/screenshots/debrief.png)
+
+### Vulnerable Zone Mode
+
+![Vulnerable Zones](assets/screenshots/vulnerable.png)
 
 ---
 
-### `MODULE_06` — Vulnerable Zone 🔴 _(Contextual Override)_
+## Pages and Features
 
-The real-world implementation of the Geospatial Empathy engine. When an incident threatens a high-risk civic asset, this module activates high-contrast alert tags:
+### 1. Landing Page
+
+The command entry point for Bengaluru Traffic Police dispatchers.
+
+- Spline-rendered 3D globe visualizing the city as a live operational orb, with real-time telemetry annotations (`LIVE: 150`, `ROC: 0.87`, `54 STATIONS`)
+- Bold typographic hero — INCIDENT. ROUTE. RESPOND. — communicates the three-step dispatch logic at a glance
+- Live system status bar showing active incidents and WebSocket connection state
+- Direct CTAs routing dispatchers to God Mode or the Intelligence dashboard
+- Navigation links to all six platform modules
+
+![Landing Page](assets/screenshots/landing.png)
+
+---
+
+### 2. God Mode — Simulation Engine
+
+The civic planning and operational control surface. Three distinct modes on one map.
+
+#### Live Map
+
+Real-time ingestion of city traffic telemetry streamed over WebSocket.
+
+- Full Bengaluru map with color-coded incident markers: HIGH (red), MEDIUM (amber), LOW (green)
+- Police station availability markers (blue = full, amber = low stock)
+- Baseline blocked routes and active diversion overlays
+- Agent activity panel: TRIAGE, SPATIAL, LOGISTICS, SUPERVISOR, DIRECTIVE, COMPLETE — with live status updates
+- Station Status panel listing all 54 stations and unit counts
+- Live feed sidebar showing incident IDs, types, and corridor tags in real time
+
+![God Mode Live](assets/screenshots/god_mode_live.png)
+
+#### Simulate — Urban Architect Mode
+
+Lets civic planners place infrastructure assets and model their impact before committing budget.
+
+- Asset palette: Rapid Response Hub (Rs. 8M, 3km radius), Drainage Grid (Rs. 12M, 2km), Maintenance Depot (Rs. 5M, 2.5km)
+- Drag-and-drop asset placement directly on the city map
+- Real-time infrastructure budget counter (Rs. 1,30,00,000 remaining)
+- Per-asset elimination rate slider and incident-in-range counter
+- Holographic skyline visualization rendering placed assets as 3D columns
+- City Health Score computed as assets are placed
+
+![God Mode Simulate](assets/screenshots/god_mode_simulate.png)
+
+#### Stress Test
+
+Push the ML model to failure by simulating cascading multi-ward gridlocks.
+
+- COUNT slider to inject 1–10 simultaneous high-severity incidents
+- Severity toggle: LOW / MIXED / HIGH
+- RUN STRESS LOOP button triggers multi-agent response pipeline
+- Crisis Comms panel: auto-generates Tweet, SMS, and Audio dispatch for each active incident
+- Plan Output cards: per-incident closure probability, officer count, barricades required
+- Agent pipeline tracks TRIAGE through COMPLETE with live status on each stage
+
+![God Mode Stress Test](assets/screenshots/god_mode_stress.png)
+
+---
+
+### 3. Sentinel — Complaint Forum
+
+Crowdsourced telemetry pipeline for hyper-local anomalies that sensors miss. Bilingual: English and Kannada.
+
+- File a complaint in EN or KN — the language toggle switches the entire input context
+- Complaint type selector: MISSED CLOSURE, WRONG DURATION, WRONG SEVERITY, SOMETHING ELSE
+- Free-text description field (800 character limit) with character counter
+- Every complaint is hashed, anonymised, and routed to the model retraining queue — no PII stored
+- Live Complaint Grid: a Bengaluru map showing complaint density in real time
+- Swarm Detection panel: auto-triggers a dispatch alert when 3 or more complaints cluster within ~500m in a 5-minute window
+- Scan interval: 10 seconds
+- Recent submissions feed showing verified and pending reports
+
+![Sentinel](assets/screenshots/sentinel.png)
+
+---
+
+### 4. Intelligence Page — The Control Room
+
+Palantir-style high-density telemetry dashboard. The operational heart of ClearPath OS.
+
+**Closure Model panel**
+
+- ROC-AUC: 0.784
+- PR-AUC: 0.312
+- Recall (Closure): 0.626
+- Precision (Closure): 0.228
+- Confusion matrix: TN 1,835 / FP 488 / FN 86 / TP 144
+- Threshold tuned for recall at theta = 0.500
+
+**Duration Regressor panel**
+
+- Median AE: 30.9 min
+- MAE: 101.9m
+- Train / Val split: 1692 / 764
+
+**Live Incident Feed**
+
+- Streaming incident IDs with cause, corridor, heat score, and age
+- HIGH severity incidents flagged in red, LOW in green
+
+**Cause Breakdown**
+
+- VEHICLE_BREAKDOWN 54%, POT_HOLES 18%, WATER_LOGGING 8%, TREE_FALL 8%, OTHERS 4%...
+
+**Hourly Heatmap (24H)**
+
+- Colour-coded hour blocks showing incident density across the day
+
+**Corridor Risk — Top 10**
+
+- Ranked corridors by active incident count: NON-CORRIDOR 63, ORR EAST 1: 13, BELLARY ROAD 1: 11...
+
+![Intelligence](assets/screenshots/intelligence.png)
+
+---
+
+### 5. Debrief Page — Model Accountability
+
+We don't hide the algorithm's mistakes. We surface every single one.
+
+> **"THE MODEL MADE MISTAKES. HERE IS EVERY ONE OF THEM."**
+
+- Predicted vs Actual scatter plot (200 data points) with error-coloured dots: green < 20m, amber 20-60m, red > 60m
+- Hover any point to see the raw incident ID, actual duration, predicted duration, and error magnitude
+- Summary metrics: Total Incidents 500, Median AE 29.9m, Mean Actual 118.6m, Mean Predicted 53.9m
+- Drift Note: auto-generated plain-language explanation of where the model is systematically failing
+- "What This Means" section: contextual analysis for ML engineers on retraining triggers
+- Anomaly Detection: 23 anomalies detected, with progress bar showing detection coverage
+- Drift Gauge visualization showing current model drift severity
+
+![Debrief](assets/screenshots/debrief.png)
+
+---
+
+### 6. Vulnerable Zone Mode
+
+This page is not a dashboard. It is a statement.
+
+> _"Right now, 2 ambulance routes and 2 school zones in Bengaluru are blocked."_
+> _"Standard traffic AI counts cars on the road. ClearPath OS asks who is inside them."_
+
+- Live counter of blocked Hospital Corridors, School Zones, and Fire Corridors at the top of the page
+- Filter tabs: ALL, HOSPITAL, SCHOOL, FIRE — each showing count of active blockages
+- Each incident card displays: zone name and distance, incident type, neighbourhood, full human-readable impact description, severity badge (CRITICAL / ELEVATED), and time since report
+- Right panel: selected incident detail with closure probability and estimated duration
+- Incident types surface real civic impact — not just road data. A tree fall near a school during pickup hours. Pot holes blocking an ambulance corridor. The system names who is affected.
+- Emotional design intent: warm amber and red tones, large typography, no technical jargon in the descriptions — built for a dispatcher making a human call in under 10 seconds
+
+![Vulnerable Zones](assets/screenshots/vulnerable.png)
+
+---
+
+## Project Structure
 
 ```
-[ 🎒 SCHOOL ZONE: ACTIVE ]     ←  Coaching hub / school proximity
-[ 🏥 EMERGENCY ROUTE: OPEN ]   ←  Hospital corridor protection
-[ 🚒 FIRE STATION: CLEAR ]     ←  Fire station egress priority
+clearpath-os/
+|
++-- frontend/
+|   +-- app/
+|   |   +-- page.tsx                  # Landing page
+|   |   +-- god-mode/
+|   |   |   +-- page.tsx              # God Mode container
+|   |   |   +-- components/
+|   |   |       +-- LiveMap.tsx       # Live map + agent panel
+|   |   |       +-- Simulate.tsx      # Urban architect mode
+|   |   |       +-- StressTest.tsx    # Stress test + crisis comms
+|   |   +-- sentinel/
+|   |   |   +-- page.tsx              # Complaint forum (bilingual)
+|   |   +-- intelligence/
+|   |   |   +-- page.tsx              # Control room dashboard
+|   |   +-- debrief/
+|   |   |   +-- page.tsx              # Model accountability
+|   |   +-- vulnerable/
+|   |       +-- page.tsx              # Vulnerable zone alerts
+|   +-- components/
+|   |   +-- ui/                       # Shared UI primitives
+|   |   +-- SplineGlobe.tsx           # Spline 3D scene (landing)
+|   |   +-- IncidentMap.tsx           # Shared map component
+|   |   +-- AgentPanel.tsx            # Multi-agent activity sidebar
+|   |   +-- LiveFeed.tsx              # Streaming incident feed
+|   +-- lib/
+|   |   +-- websocket.ts              # WS connection manager
+|   |   +-- api.ts                    # API client
+|   +-- public/
+|   |   +-- spline/                   # Spline scene exports
+|   +-- package.json
+|   +-- tailwind.config.ts
+|
++-- backend/
+|   +-- main.py                       # FastAPI entry point
+|   +-- routers/
+|   |   +-- incidents.py              # Incident CRUD + severity
+|   |   +-- geospatial.py             # PostGIS radius queries
+|   |   +-- sentinel.py               # Complaint ingestion
+|   |   +-- stress.py                 # Stress test simulation
+|   +-- ml/
+|   |   +-- model.py                  # LightGBM inference
+|   |   +-- train.py                  # Training pipeline
+|   |   +-- debrief.py                # Drift detection
+|   +-- db/
+|   |   +-- schema.sql                # PostgreSQL + PostGIS schema
+|   |   +-- seed.py                   # Sample data seeder
+|   +-- requirements.txt
+|
++-- assets/
+|   +-- screenshots/
+|       +-- landing.png
+|       +-- god_mode_live.png
+|       +-- god_mode_simulate.png
+|       +-- god_mode_stress.png
+|       +-- sentinel.png
+|       +-- intelligence.png
+|       +-- debrief.png
+|       +-- vulnerable.png
+|
++-- .env.example
++-- README.md
 ```
 
-Cold data becomes a human-centric dispatch priority.
-
 ---
 
-### `MODULE_07` — Debrief 🟡 _(Model Accountability)_
-
-We don't hide the algorithm's mistakes — we **highlight them**.
-
-The Debrief page tracks every instance where the LightGBM model's duration prediction drifted from reality. By plotting spatial errors and generating "Drift Notes," we give ML engineers the exact data needed to retrain and improve the pipeline.
-
-> _Accountability isn't a post-mortem. It's a retraining signal._
-
----
-
-## 💻 Technical Stack
+## Tech Stack
 
 ### Frontend
 
-| Technology         | Role                                |
-| ------------------ | ----------------------------------- |
-| React.js / Next.js | Fast, component-based rendering     |
-| Tailwind CSS       | High-density semantic color grading |
-| Recharts / D3.js   | Telemetry visualization             |
+| Technology            | Usage                                             |
+| --------------------- | ------------------------------------------------- |
+| React 18 / Next.js 14 | Component architecture, app router                |
+| Tailwind CSS          | Utility-first styling, semantic color grading     |
+| Spline                | 3D globe scene on landing page                    |
+| Recharts / D3.js      | Intelligence page charts, scatter plots, heatmaps |
+| Mapbox GL / Leaflet   | Live incident map in God Mode                     |
+| WebSocket (native)    | Real-time incident feed and agent activity        |
 
-### Backend & ML Pipeline
+### Backend and ML Pipeline
 
-| Technology           | Role                                           |
-| -------------------- | ---------------------------------------------- |
-| Python / FastAPI     | High-concurrency API routing                   |
-| LightGBM / XGBoost   | Incident duration regression                   |
-| PostgreSQL + PostGIS | Geospatial radius queries for Vulnerable Zones |
-
-### Architecture at a Glance
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                     CLEARPATH OS                        │
-│                                                         │
-│  ┌──────────┐    ┌──────────┐    ┌───────────────────┐  │
-│  │ Sentinel │───▶│ FastAPI  │───▶│  LightGBM Engine  │  │
-│  │ (Reports)│    │ Backend  │    │  (Severity Score) │  │
-│  └──────────┘    └────┬─────┘    └────────┬──────────┘  │
-│                       │                   │             │
-│                  ┌────▼─────┐    ┌────────▼──────────┐  │
-│                  │ PostGIS  │    │  Geospatial Check  │  │
-│                  │ (500m q) │◀───│  Vulnerable Zones  │  │
-│                  └────┬─────┘    └───────────────────┘  │
-│                       │                                 │
-│                  ┌────▼──────────────────────────────┐  │
-│                  │     React Dashboard (Intel Page)   │  │
-│                  │     God Mode / Debrief / Sentinel  │  │
-│                  └───────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
-```
+| Technology            | Usage                                                     |
+| --------------------- | --------------------------------------------------------- |
+| Python 3.9+ / FastAPI | High-concurrency API, WebSocket server                    |
+| LightGBM              | Incident closure classification                           |
+| XGBoost               | Incident duration regression                              |
+| PostgreSQL + PostGIS  | Geospatial radius queries, 500m Vulnerable Zone detection |
+| Pandas / Scikit-learn | Feature engineering, model evaluation                     |
 
 ---
 
-## 🚀 Local Installation
+## Local Installation
 
 ### Prerequisites
 
 - Python 3.9+
 - Node.js 18+
-- PostgreSQL with PostGIS extension
+- PostgreSQL with PostGIS extension enabled
 
 ### Setup
 
@@ -214,7 +368,7 @@ The Debrief page tracks every instance where the LightGBM model's duration predi
 git clone https://github.com/yourusername/clearpath-os.git
 cd clearpath-os
 
-# 2. Setup the Python Virtual Environment (Backend)
+# 2. Backend — create virtual environment
 cd backend
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
@@ -222,17 +376,17 @@ pip install -r requirements.txt
 
 # 3. Configure environment variables
 cp .env.example .env
-# → Set your DATABASE_URL, PostGIS connection, etc.
+# Edit .env: set DATABASE_URL, PostGIS credentials, model path
 
 # 4. Start the FastAPI server
 uvicorn main:app --reload
-# Server runs at http://localhost:8000
+# Runs at http://localhost:8000
 
-# 5. Setup the Frontend (new terminal)
+# 5. Frontend — open a new terminal
 cd ../frontend
 npm install
 npm run dev
-# App runs at http://localhost:3000
+# Runs at http://localhost:3000
 ```
 
 ### Environment Variables
@@ -241,47 +395,17 @@ npm run dev
 DATABASE_URL=postgresql://user:password@localhost:5432/clearpath
 POSTGIS_ENABLED=true
 VULNERABLE_ZONE_RADIUS_METERS=500
-MODEL_PATH=./models/lightgbm_incident.pkl
+MODEL_PATH=./ml/models/lightgbm_closure.pkl
+REGRESSOR_PATH=./ml/models/xgb_duration.pkl
+WEBSOCKET_PORT=8001
 ```
-
----
-
-## 📊 Model Accountability — The Debrief Protocol
-
-ClearPath OS surfaces model failure, not just model success.
-
-| Accountability Feature  | Description                                                |
-| ----------------------- | ---------------------------------------------------------- |
-| **Drift Notes**         | Auto-generated when prediction error exceeds threshold     |
-| **Spatial Error Plots** | Maps where the model consistently under/over-predicts      |
-| **Retrain Flags**       | Triggers when drift accumulates above retraining threshold |
-| **ROC-AUC Live Feed**   | Real-time precision/recall visible to dispatchers          |
-
-> The Debrief page isn't for optics. It's a retraining signal for engineers — logged, plotted, and acted on.
-
----
-
-## 👥 Team
-
-| Name | Role                                   |
-| ---- | -------------------------------------- |
-| —    | ML Engineering — LightGBM Pipeline     |
-| —    | Backend — FastAPI + PostGIS            |
-| —    | Frontend — React Dashboard             |
-| —    | Civic UX — Dispatcher Interface Design |
-
----
-
-## 📄 License
-
-MIT License — see [`LICENSE`](./LICENSE) for details.
 
 ---
 
 <div align="center">
 
-**ClearPath OS** — _Because the road to a hospital should never be blocked by a pothole report._
+**ClearPath OS** — built for Bengaluru Traffic Police
 
-`v2.4.1` · Built with Geospatial Empathy · MIT License
+_Standard traffic AI counts cars on the road. ClearPath OS asks who is inside them._
 
 </div>
