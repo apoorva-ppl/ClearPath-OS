@@ -1,0 +1,89 @@
+# ClearPath OS — central configuration
+# Single source of truth for every tunable number. Edit here, not in code.
+
+paths:
+  raw_csv: "data/raw/astram_events.csv"
+  clean_parquet: "data/processed/clean.parquet"
+  features_parquet: "data/processed/features.parquet"
+  severity_model: "models/severity.txt"
+  duration_model: "models/duration.txt"
+  metrics: "models/metrics.json"
+
+seed: 42
+
+# Probability threshold above which the closure classifier's output is treated
+# as "this incident will require a road closure" (drives barricade planning when
+# the true flag is unknown, e.g. live/simulation mode).
+closure_threshold: 0.5
+
+# ---- Temporal split (so we validate on the future, not leak it) ----
+# Data spans ~2023-11 to 2024-04. Train on the earlier window, validate on the later.
+split:
+  train_end: "2024-03-01"     # rows with start_datetime < this -> train
+                              # rows >= this -> validation
+
+# ---- Target construction (severity / impact proxy) ----
+# No measured congestion exists in the data, so impact is a CONSTRUCTED ordinal proxy.
+# Each component contributes points; the total is binned into Low/Medium/High.
+severity:
+  # points added when the condition is true
+  closure_points: 3          # requires_road_closure == True
+  priority_high_points: 2    # priority == High
+  # cause severity tiers -> points
+  cause_points:
+    accident: 3
+    water_logging: 3
+    procession: 3
+    protest: 3
+    vip_movement: 2
+    public_event: 2
+    congestion: 2
+    tree_fall: 2
+    road_conditions: 1
+    construction: 1
+    vehicle_breakdown: 1
+    debris: 1
+    pot_holes: 0
+    others: 0
+  default_cause_points: 1
+  # duration tier -> points (uses cleaned clearance_minutes; missing -> 0)
+  duration_points:
+    over_240_min: 2          # > 4 hours
+    over_60_min: 1           # 1-4 hours
+  # binning of the total score into 3 classes
+  bins:
+    medium_min: 3            # score >= 3 -> Medium
+    high_min: 5              # score >= 5 -> High
+
+# ---- Duration cleaning (for the regression target) ----
+duration:
+  min_minutes: 1             # drop non-positive / nonsensical gaps
+  cap_percentile: 0.99       # cap extreme admin close-outs at the 99th pct
+  hard_cap_minutes: 1440     # absolute ceiling = 24h regardless of percentile
+
+# ---- Resource optimisation rules ----
+resources:
+  officers_per_severity:     # demand (officers) per incident by predicted class
+    High: 6
+    Medium: 3
+    Low: 1
+  barricades_per_severity:
+    High: 8
+    Medium: 3
+    Low: 0
+  closure_barricade_bonus: 4 # extra barricades if requires_road_closure
+  station_capacity: 12       # officers available per synthesised station
+  max_assign_distance_km: 15 # an incident beyond this from every station is "uncovered"
+
+# ---- Diversion routing ----
+diversion:
+  graph_grid_m: 400          # spatial grid cell size when synthesising the road graph
+  buffer_radius_m: 800       # exclusion-zone radius around an incident
+  cost_inflation: 8.0        # multiply edge weight inside the buffer by this
+  max_radius_expansions: 4   # feasibility loop: how many times to grow the radius
+  radius_growth: 1.5         # multiply radius by this each expansion
+
+# ---- LLM directive ----
+llm:
+  model: "claude-sonnet-4-6"
+  max_tokens: 1000

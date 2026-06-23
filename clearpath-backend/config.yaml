@@ -1,0 +1,35 @@
+spatial:
+  grid_resolution_m: 400
+  base_buffer_radius_m: 800
+  weight_inflation_factor: 8.0
+
+logistics:
+  max_station_capacity: 12
+  max_dispatch_distance_km: 15.0
+
+supervisor:
+  max_expansion_attempts: 4
+  radius_expansion_multiplier: 1.5
+
+manpower:
+  low:
+    officers: 1
+    barricades: 0
+  medium:
+    officers: 3
+    barricades: 3
+  high:
+    officers: 6
+    barricades: 8
+
+barricade:
+  cost_per_unit_per_hour: 250.0
+  max_budget_per_incident: 10000.0
+  model_dir: "models"
+data_dir: "data/processed"
+station_capacity: 12
+host: "127.0.0.1"
+port: 8000
+cors_origins:
+  - "http://localhost:3000"
+  - "http://localhost:3001"

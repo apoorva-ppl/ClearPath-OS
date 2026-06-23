@@ -1,0 +1,9 @@
+{
+  "n_closed": 2454,
+  "n_holdout": 491,
+  "mae_seed_model_min": 97.3,
+  "mae_matured_model_min": 104.6,
+  "delta_pct": -7.4,
+  "learning_helped": false,
+  "note": "More history did not reduce error on the latest window \u2014 evidence of distribution drift; the loop surfaces this so an operator can investigate rather than trust a stale model."
+}

@@ -1,0 +1,35 @@
+{
+  "closure": {
+    "roc_auc": 0.7836,
+    "pr_auc": 0.3124,
+    "closure_precision": 0.2278,
+    "closure_recall": 0.6261,
+    "closure_f1": 0.3341,
+    "confusion_matrix": [
+      [
+        1835,
+        488
+      ],
+      [
+        86,
+        144
+      ]
+    ],
+    "labels": [
+      "No closure",
+      "Closure"
+    ],
+    "decision_threshold": 0.5,
+    "n_train": 5504,
+    "n_val": 2553,
+    "val_positives": 230,
+    "best_iteration": 56
+  },
+  "duration": {
+    "mae_minutes": 101.86,
+    "median_ae_minutes": 30.87,
+    "n_train": 1692,
+    "n_val": 764,
+    "best_iteration": 34
+  }
+}

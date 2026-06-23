@@ -1,0 +1,24 @@
+# ClearPath OS — Python dependencies
+# Tested on Python 3.12.
+
+# data
+pandas>=2.2.2
+numpy>=1.26.4
+pyarrow>=16.1.0
+PyYAML==6.0.1
+
+# models
+lightgbm>=4.3.0
+scikit-learn>=1.5.0
+
+# optimisation + routing
+ortools>=9.10.4067
+networkx>=3.3
+
+# directive / PDF
+fpdf2>=2.8.0
+anthropic>=0.34.0        # optional; offline template used if no API key
+
+# demo UI
+streamlit>=1.36.0
+pydeck>=0.9.1
