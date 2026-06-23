@@ -404,24 +404,29 @@ clearPathOS/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/clearpath-os.git
+git clone https://github.com/apoorva-ppl/clearpath-os.git
+git clone https://github.com/apoorva-ppl/clearpath-os-dist.git
 cd clearpath-os
 
-# 2. Backend — create virtual environment
+# 2. ML Pipeline — install the model package (from sibling directory)
+pip install -e ../clearpath-os-dist
+# Exposes LightGBM models, OR-Tools ILP optimizer, and NetworkX route engine
+
+# 3. Backend — create virtual environment
 cd backend
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-# 3. Configure environment variables
+# 4. Configure environment variables
 cp .env.example .env
-# Edit .env: set DATABASE_URL, PostGIS credentials, model path
+# Edit .env: set DATABASE_URL, PostGIS credentials, MODEL_PATH=../../clearpath-os-dist
 
-# 4. Start the FastAPI server
-uvicorn main:app --reload
+# 5. Start the FastAPI server
+uvicorn app.main:app --reload
 # Runs at http://localhost:8000
 
-# 5. Frontend — open a new terminal
+# 6. Frontend — open a new terminal
 cd ../frontend
 yarn install
 yarn start
