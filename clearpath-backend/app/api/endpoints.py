@@ -622,7 +622,7 @@ class ComplaintModel(Base):
     lng          = Column(Float)
     submitted_at = Column(DateTime, default=datetime.utcnow)
 
-# Base.metadata.create_all(engine)
+Base.metadata.create_all(engine)
 
 class ComplaintIn(BaseModel):
     text: str
