@@ -607,6 +607,7 @@ from sqlalchemy.orm import sessionmaker
 from pydantic import BaseModel
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./complaints.db")
+print("DATABASE_URL =", repr(DATABASE_URL))
 engine = create_engine(DATABASE_URL)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
