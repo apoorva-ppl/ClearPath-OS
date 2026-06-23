@@ -20,13 +20,13 @@ _Shifting city infrastructure from volume-based routing to context-aware empathy
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)
-![Next.js](https://img.shields.io/badge/Next.js-black?style=flat-square&logo=next.js&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
 ![LightGBM](https://img.shields.io/badge/LightGBM-enabled-orange?style=flat-square)
 ![PostGIS](https://img.shields.io/badge/PostGIS-spatial-336791?style=flat-square&logo=postgresql&logoColor=white)
 ![Spline](https://img.shields.io/badge/Spline-3D-blueviolet?style=flat-square)
 
 </div>
+>  **Live Demo:** [clear-path-os.vercel.app](https://clear-path-os-apoorva-pandeys-projects-14145643.vercel.app)
 
 ---
 
@@ -264,68 +264,105 @@ This page is not a dashboard. It is a statement.
 ## Project Structure
 
 ```
-clearpath-os/
-|
-+-- frontend/
-|   +-- app/
-|   |   +-- page.tsx                  # Landing page
-|   |   +-- god-mode/
-|   |   |   +-- page.tsx              # God Mode container
-|   |   |   +-- components/
-|   |   |       +-- LiveMap.tsx       # Live map + agent panel
-|   |   |       +-- Simulate.tsx      # Urban architect mode
-|   |   |       +-- StressTest.tsx    # Stress test + crisis comms
-|   |   +-- sentinel/
-|   |   |   +-- page.tsx              # Complaint forum (bilingual)
-|   |   +-- intelligence/
-|   |   |   +-- page.tsx              # Control room dashboard
-|   |   +-- debrief/
-|   |   |   +-- page.tsx              # Model accountability
-|   |   +-- vulnerable/
-|   |       +-- page.tsx              # Vulnerable zone alerts
-|   +-- components/
-|   |   +-- ui/                       # Shared UI primitives
-|   |   +-- SplineGlobe.tsx           # Spline 3D scene (landing)
-|   |   +-- IncidentMap.tsx           # Shared map component
-|   |   +-- AgentPanel.tsx            # Multi-agent activity sidebar
-|   |   +-- LiveFeed.tsx              # Streaming incident feed
-|   +-- lib/
-|   |   +-- websocket.ts              # WS connection manager
-|   |   +-- api.ts                    # API client
-|   +-- public/
-|   |   +-- spline/                   # Spline scene exports
-|   +-- package.json
-|   +-- tailwind.config.ts
-|
-+-- backend/
-|   +-- main.py                       # FastAPI entry point
-|   +-- routers/
-|   |   +-- incidents.py              # Incident CRUD + severity
-|   |   +-- geospatial.py             # PostGIS radius queries
-|   |   +-- sentinel.py               # Complaint ingestion
-|   |   +-- stress.py                 # Stress test simulation
-|   +-- ml/
-|   |   +-- model.py                  # LightGBM inference
-|   |   +-- train.py                  # Training pipeline
-|   |   +-- debrief.py                # Drift detection
-|   +-- db/
-|   |   +-- schema.sql                # PostgreSQL + PostGIS schema
-|   |   +-- seed.py                   # Sample data seeder
-|   +-- requirements.txt
+Here's the accurate tree for your README:
+
+```
+
+```
+clearPathOS/
 |
 +-- assets/
-|   +-- screenshots/
-|       +-- landing.png
-|       +-- god_mode_live.png
-|       +-- god_mode_simulate.png
-|       +-- god_mode_stress.png
-|       +-- sentinel.png
-|       +-- intelligence.png
-|       +-- debrief.png
-|       +-- vulnerable.png
+|   +-- screenshots/                        # README images
+|       +-- landing.webp
+|       +-- live_mode.webp
+|       +-- simulate.webp
+|       +-- stress.webp
+|       +-- sentinel.webp
+|       +-- intelligence.webp
+|       +-- debrief.webp
++-- vulnerable.webp
 |
-+-- .env.example
++-- clearpath-backend/                      # FastAPI backend
+|   +-- app/
+|   |   +-- agents/                         # Multi-agent pipeline
+|   |   |   +-- directive.py                # Directive agent
+|   |   |   +-- logistics.py                # Resource dispatch logic
+|   |   |   +-- spatial.py                  # Geospatial radius queries
+|   |   |   +-- supervisor.py               # Agent orchestrator
+|   |   |   +-- triage.py                   # Incident triage agent
+|   |   +-- api/
+|   |   |   +-- deps.py                     # FastAPI dependencies
+|   |   |   +-- endpoints.py                # All API routes
+|   |   +-- core/
+|   |   |   +-- config.py                   # App configuration
+|   |   |   +-- directive.py                # Directive generation
+|   |   |   +-- generator.py                # Audio dispatch generator
+|   |   |   +-- ml_bridge.py                # LightGBM inference bridge
+|   |   |   +-- state.py                    # Shared app state
+|   |   +-- services/
+|   |   |   +-- ai_services.py              # LLM + AI integrations
+|   |   |   +-- storage.py                  # DB storage helpers
+|   |   +-- main.py                         # FastAPI entry point
+|   +-- data/processed/
+|   |   +-- clean.parquet                   # Cleaned incident data
+|   |   +-- features.parquet                # Engineered features
+|   |   +-- stations.csv                    # 54 Bengaluru stations
+|   +-- models/
+|   |   +-- duration.txt                    # XGBoost duration model
+|   |   +-- metrics.json                    # Model evaluation metrics
+|   |   +-- severity.txt                    # LightGBM severity model
+|   |   +-- severity_importance.csv         # Feature importances
+|   +-- config.yaml                         # Spatial + dispatch config
+|   +-- requirements.txt                    # Python dependencies
+|
++-- frontend/                               # React 18 + CRA + CRACO
+|   +-- public/
+|   |   +-- assets/
+|   |   |   +-- intro.mp4                   # Landing intro video
+|   |   +-- index.html                      # HTML entry point
+|   +-- src/
+|   |   +-- components/
+|   |   |   +-- clearpath/                  # Domain-specific components
+|   |   |   |   +-- AgentStepRow.jsx        # Agent pipeline step UI
+|   |   |   |   +-- AnimatedBar.jsx         # Animated metric bar
+|   |   |   |   +-- CityCore.jsx            # City health core visual
+|   |   |   |   +-- CommandPalette.jsx      # Dispatcher command UI
+|   |   |   |   +-- ComplaintForm.jsx       # Sentinel complaint form
+|   |   |   |   +-- HolographicSkyline.jsx  # 3D skyline simulation view
+|   |   |   |   +-- NavBar.jsx              # Top navigation bar
+|   |   |   |   +-- SimulateTab.jsx         # Urban architect tab
+|   |   |   |   +-- SplineScene.jsx         # Spline 3D globe embed
+|   |   |   |   +-- VoicePulse.jsx          # Audio dispatch visualizer
+|   |   |   +-- ui/                         # shadcn/ui primitives
+|   |   +-- pages/
+|   |   |   +-- Landing.jsx                 # Entry + 3D globe hero
+|   |   |   +-- GodMode.jsx                 # Live map + simulate + stress
+|   |   |   +-- Sentinel.jsx                # Complaint forum (bilingual)
+|   |   |   +-- Intelligence.jsx            # Control room dashboard
+|   |   |   +-- Debrief.jsx                 # Model accountability page
+|   |   |   +-- Vulnerablezone.jsx          # Vulnerable zone alerts
+|   |   +-- lib/
+|   |   |   +-- api.js                      # Axios API client
+|   |   |   +-- parsePlanStream.js          # SSE stream parser
+|   |   |   +-- utils.js                    # Shared utilities
+|   |   +-- hooks/
+|   |   |   +-- use-toast.js                # Toast notification hook
+|   |   +-- App.js                          # Root component + routing
+|   |   +-- index.js                        # React DOM entry point
+|   +-- plugins/health-check/               # Custom webpack health plugin
+|   +-- craco.config.js                     # Webpack config overrides
+|   +-- tailwind.config.js                  # Tailwind theme config
+|   +-- package.json                        # Frontend dependencies
+|   +-- yarn.lock                           # Locked dependency tree
+|
++-- .env                                    # Root env (backend URL)
++-- .gitignore
++-- vercel.json                             # Vercel deployment config
 +-- README.md
+```
+
+```
+
 ```
 
 ---
@@ -334,14 +371,14 @@ clearpath-os/
 
 ### Frontend
 
-| Technology            | Usage                                             |
-| --------------------- | ------------------------------------------------- |
-| React 18 / Next.js 14 | Component architecture, app router                |
-| Tailwind CSS          | Utility-first styling, semantic color grading     |
-| Spline                | 3D globe scene on landing page                    |
-| Recharts / D3.js      | Intelligence page charts, scatter plots, heatmaps |
-| Mapbox GL / Leaflet   | Live incident map in God Mode                     |
-| WebSocket (native)    | Real-time incident feed and agent activity        |
+| Technology             | Usage                                             |
+| ---------------------- | ------------------------------------------------- |
+| React 18 (CRA + CRACO) | Component architecture, custom webpack config     |
+| Tailwind CSS           | Utility-first styling, semantic color grading     |
+| Spline                 | 3D globe scene on landing page                    |
+| Recharts / D3.js       | Intelligence page charts, scatter plots, heatmaps |
+| Mapbox GL / Leaflet    | Live incident map in God Mode                     |
+| WebSocket (native)     | Real-time incident feed and agent activity        |
 
 ### Backend and ML Pipeline
 
@@ -386,8 +423,8 @@ uvicorn main:app --reload
 
 # 5. Frontend — open a new terminal
 cd ../frontend
-npm install
-npm run dev
+yarn install
+yarn start
 # Runs at http://localhost:3000
 ```
 
