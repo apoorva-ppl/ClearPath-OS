@@ -1,5 +1,5 @@
 const BACKEND_URL =
-  process.env.VITE_BACKEND_URL || "https://clearpath-os2.onrender.com";
+  import.meta.env.VITE_BACKEND_URL || "https://clearpath-os2.onrender.com";
 export const API = `${BACKEND_URL}/api`;
 export const ASSET_BASE = BACKEND_URL;
 
