@@ -573,7 +573,7 @@ async def websocket_live(websocket: WebSocket, city_state: CityStateDep, artifac
             if heartbeat_count % 6 == 0:
                 grid_scores = await asyncio.to_thread(_score_risk_grid, artifacts)
                 top_3 = sorted(grid_scores, key=lambda c: c["closure_prob"], reverse=True)[:3]
-                risk_alerts = top_3
+                risk_alerts = []
 
             # Send heartbeat with current city state
             await websocket.send_json(
