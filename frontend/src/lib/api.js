@@ -20,6 +20,9 @@ export async function reverseGeocode(lat, lng) {
 }
 
 export function wsURL(path) {
-  const base = (BACKEND_URL || window.location.origin).replace(/^http/, "ws");
+  const base = (BACKEND_URL || "https://clearpath-os2.onrender.com").replace(
+    /^http/,
+    "ws",
+  );
   return `${base}/api${path}`;
 }
