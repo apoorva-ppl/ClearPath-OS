@@ -123,11 +123,9 @@ def _severity_tier(closure_prob: float, decision_threshold: float = 0.5) -> str:
     else:
         return "Low"
 
-
 def _duration_display(predicted_minutes: float) -> str:
-    """Convert predicted minutes to display string."""
     if predicted_minutes < 60:
-        return "< 1h"
+        return "under 1h"
     elif predicted_minutes < 240:
         return "1-4h"
     else:

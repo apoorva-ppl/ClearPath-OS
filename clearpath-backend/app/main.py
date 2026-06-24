@@ -377,11 +377,14 @@ try:
     # catch-all and would otherwise shadow /health, /api/*, etc.
     frontend_dir = Path(__file__).resolve().parent.parent.parent / "frontend"
     frontend_dir.mkdir(parents=True, exist_ok=True)
-    app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
+
+# Only mount frontend if index.html exists (skip on Render where frontend is on Vercel)
+    if (frontend_dir / "index.html").exists():
+        app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
+    else:
+        log.info("No frontend build found — skipping static mount (frontend served by Vercel)")
 except ImportError:
     log.warning("API endpoints router not found; skipping registration")
-
-
 # ════════════════════════════════════════════════════════════════════════════
 # UVICORN ENTRY POINT
 # ════════════════════════════════════════════════════════════════════════════
