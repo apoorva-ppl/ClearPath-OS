@@ -1,36 +1,3 @@
-"""
-Final agent: Translation layer from mathematical outputs to human-readable action plans.
-
-The upstream agents produce raw math:
-  - Triage    → closure_prob: 0.82, dur_minutes: 142.3
-  - Spatial   → diversion_path: [[12.97, 77.59], ...], affected_edges: [...]
-  - Logistics → officer_assignments: [{"station": "Peenya", "officers": 6}]
-
-This agent translates into language a dispatcher and citizen can act on:
-  - "URGENT: Deploy 6 officers from Peenya PS to Tumkur Road"
-  - "Expect 2-3 hour delays. Avoid Tumkur Road. Use Bellary Road via NH44."
-  - Step-by-step per-station instructions
-
-This agent contains ZERO ML, ZERO graph computation, ZERO ILP solving.
-Pure data transformation — PlanState in, human-readable dict out.
-
-WHY A DEDICATED TRANSLATION AGENT:
-──────────────────────────────────
-- Triage/Spatial/Logistics produce mathematically correct but operationally
-  opaque outputs. A dispatcher cannot act on closure_prob=0.82.
-- Separation of concerns: optimization agents never contain string formatting
-  or UX logic. Directive never contains math.
-- This boundary makes both sides independently testable — unit test the
-  directive agent with mock PlanState without running LightGBM or OR-Tools.
-
-WHY PYDANTIC MODEL NOT DICT:
-────────────────────────────
-- Frontend keys on specific field names. Dict has no schema contract — typo
-  in key name fails silently at runtime.
-- Pydantic model fails loudly at construction time.
-- FastAPI serializes Pydantic models automatically — no manual json.dumps().
-"""
-
 import asyncio
 import json
 import logging
@@ -41,30 +8,10 @@ from pydantic import BaseModel, Field
 from app.core.state import PlanState
 from app.core.config import get_settings
 
-
 log = logging.getLogger(__name__)
 
-
-# ════════════════════════════════════════════════════════════════════════════
-# OUTPUT MODEL
-# ════════════════════════════════════════════════════════════════════════════
-
-
+#pydantic model , defines what frontend should recieve
 class DirectiveOutput(BaseModel):
-    """
-    Human-readable action plan translated from mathematical optimization.
-
-    Attributes:
-        headline: One-liner summary (e.g., "URGENT: tree_fall — deploying 6 officers").
-        severity_label: Dispatch urgency tier (High/Medium/Low/Escalated).
-        citizen_alert: SMS-safe alert text (<160 chars) for public broadcast.
-        dispatcher_instructions: Numbered step-by-step instructions per station.
-        estimated_clearance: Human-readable duration (e.g., "~2h 22m").
-        total_officers_deployed: Sum of officers assigned (0 if escalated).
-        total_barricades: Barricade units deployed.
-        feasibility_warning: None if fully feasible; error message if degraded.
-    """
-
     headline: str
     severity_label: Literal["High", "Medium", "Low", "Escalated"]
     citizen_alert: str
@@ -74,66 +21,34 @@ class DirectiveOutput(BaseModel):
     total_barricades: int
     feasibility_warning: str | None = None
 
-
-# ════════════════════════════════════════════════════════════════════════════
-# DIRECTIVE AGENT
-# ════════════════════════════════════════════════════════════════════════════
-
-
 class DirectiveAgent:
-    """Translation layer: mathematical optimization → human-readable action plan."""
-
-    # Severity prefix mapping (move to config.yaml when settings schema extended)
     SEVERITY_PREFIX = {
         "High": "URGENT",
         "Medium": "ADVISORY",
         "Low": "NOTICE",
     }
-
+    #main function
     def run(self, state: PlanState) -> DirectiveOutput:
-        """
-        Generate a human-readable directive from the complete PlanState.
-
-        Routing logic uses guard clauses, not nested if/else:
-          1. If escalated: escalation directive (mutual aid required).
-          2. If logistics invalid: degraded directive (confidence warning).
-          3. Otherwise: full directive (standard operations).
-
-        WHY GUARD CLAUSE ROUTING:
-          - Each state is qualitatively different, not just quantitatively.
-          - Escalation is not "low confidence" — fundamentally different
-            operational situation requiring different language and procedures.
-          - Guard clauses make routing explicit and readable.
-            Nested if/else buries escalation 3 levels deep.
-
-        Args:
-            state: Fully populated PlanState after supervisor approval.
-
-        Returns:
-            DirectiveOutput with all fields populated.
-
-        Raises:
-            ValueError: If state.triage is None (invalid pipeline order).
-        """
         if state.triage is None:
             raise ValueError(
                 "DirectiveAgent called before TriageAgent — invalid pipeline order"
             )
-
+         #branch 1 -> escalation req
         if state.escalated:
             return self._build_escalation_directive(state)
-
+         #branch 2 -> greedy instead of ILP (output with a warning of "Reduced Confidence" or "Degrade Directive")
         if not self._is_logistics_valid(state):
-            return self._build_degraded_directive(state)
-
+            return self._build_degraded_directive(state) #when used greedy instead of ILP
+         #branch 3-> generate normal plan
         return self._build_full_directive(state)
-
+      
     def _build_full_directive(self, state: PlanState) -> DirectiveOutput:
-        """Build directive for fully feasible plan."""
+
         severity = state.triage.severity_tier
         cause = state.incident.cause
         officers = state.logistics.total_officers if state.logistics else 0
 
+        #Example Headline:- road accident , deploy 20 officers
         headline = self._build_headline(severity, cause, officers)
         citizen_alert = self._build_citizen_alert(
             severity,
@@ -164,7 +79,7 @@ class DirectiveAgent:
         )
 
     def _build_escalation_directive(self, state: PlanState) -> DirectiveOutput:
-        """Build directive when resources exhausted (mutual aid required)."""
+
         severity = state.triage.severity_tier
         return DirectiveOutput(
             headline="ESCALATION REQUIRED: Insufficient local resources",
@@ -262,32 +177,7 @@ class DirectiveAgent:
             return False
         return state.logistics.feasible
 
-
-# ════════════════════════════════════════════════════════════════════════════
-# ASYNC WRAPPER FOR GENERATOR
-# ════════════════════════════════════════════════════════════════════════════
-
-
 async def _generate_directive(state: PlanState) -> PlanState:
-    """
-    Async wrapper for DirectiveAgent.run().
-
-    Runs DirectiveAgent in a thread to keep the event loop free,
-    then attaches the DirectiveOutput to state.
-
-    WHY asyncio.to_thread():
-      - DirectiveAgent.run() is synchronous and CPU-bound (string
-        formatting, list comprehensions). Running it directly in an
-        async function blocks the event loop.
-      - asyncio.to_thread() offloads to threadpool, keeping loop
-        responsive for other requests.
-
-    Args:
-        state: Fully populated PlanState after supervisor approval.
-
-    Returns:
-        PlanState with state.directive populated.
-    """
     agent = DirectiveAgent()
     directive = await asyncio.to_thread(agent.run, state)
     return state.model_copy(update={"directive": directive})
