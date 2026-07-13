@@ -1,20 +1,3 @@
-"""
-after_action.py  —  Stage 7  (the differentiator deliverable).
-
-IN : data/processed/features.parquet  +  models/duration.txt
-OUT: - models/after_action.csv   (per-incident predicted vs actual clearance)
-     - models/after_action.json  (summary: MAE before vs after retrain)
-     returns a dict the Streamlit app plots.
-
-Directly answers the PS gap "No post-event learning system."
-We take CLOSED incidents that have a real resolved/closed time, compute ACTUAL
-clearance minutes, and compare against what the model would have predicted. We
-then demonstrate the learning loop: retrain including the most recent closed
-window and show the held-out error shrink. That is the "model learns from its
-own errors" story, grounded in real columns (status == closed, closed_datetime).
-
-Run:  python -m src.after_action
-"""
 from __future__ import annotations
 
 import json
@@ -47,11 +30,6 @@ def run(cfg: dict | None = None) -> dict:
             ds, num_boost_round=300,
         )
 
-    # Expanding-window evaluation of the learning loop.
-    # Fix the final slice as the common held-out "future" both models are scored on.
-    # V1 = the early model (small history). V2 = the matured model that has since
-    # ingested more closed incidents (everything up to the holdout). Both are
-    # evaluated on the SAME unseen holdout, so any gap reflects genuine learning.
     n = len(closed)
     holdout_start = int(n * 0.80)
     seed_end = int(n * 0.40)                 # V1 sees only the first 40%
@@ -69,9 +47,7 @@ def run(cfg: dict | None = None) -> dict:
     mae_before = float(mean_absolute_error(y_true, p1))
     mae_after = float(mean_absolute_error(y_true, p2))
     delta_pct = (mae_before - mae_after) / mae_before * 100 if mae_before else 0.0
-    # positive delta_pct => matured model is better; negative => distribution drift
-    # dominates and more history did not help. We report it honestly either way;
-    # the deliverable's value is the MONITORING loop, not a guaranteed win.
+
     learning_helped = mae_after < mae_before
 
     # per-incident table for the scatter plot (deployed model vs actual)

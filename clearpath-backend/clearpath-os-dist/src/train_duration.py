@@ -1,31 +1,9 @@
-"""
-train_duration.py  —  Stage 4b.
-
-IN : data/processed/features.parquet
-OUT: models/duration.txt   (LightGBM regressor, predicts log1p(minutes))
-     metrics.json updated with duration MAE / median-AE (in minutes)
-
-Task type
----------
-SUPERVISED REGRESSION on cleaned clearance time. Trained only on rows where
-dur_target_min is usable (positive, under the 24h ceiling, percentile-capped).
-We learn in log space (log1p) because clearance times are heavily right-skewed,
-then invert with expm1 for reporting in real minutes.
-
-If MAE is poor, the app falls back to presenting a TIER (<60 / 60-240 / 240+ min)
-rather than a misleadingly precise number — see pipeline.py.
-
-Run:  python -m src.train_duration
-"""
 from __future__ import annotations
-
 import json
-
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_absolute_error, median_absolute_error
-
 from .features import CATEGORICAL, FEATURE_COLS
 from .utils import load_config, resolve, log
 
@@ -43,7 +21,7 @@ def train(cfg: dict | None = None) -> dict:
     if len(va) < 20:
         log("duration: WARNING — tiny validation set; metrics are indicative only.")
 
-    y_tr = np.log1p(tr["dur_target_min"].values)
+    y_tr = np.log1p(tr["dur_target_min"].values) #compresses very large clearane times into smaller range , making learning easier.
     y_va_real = va["dur_target_min"].values
 
     train_set = lgb.Dataset(tr[FEATURE_COLS], label=y_tr,
@@ -72,10 +50,10 @@ def train(cfg: dict | None = None) -> dict:
         callbacks=[lgb.early_stopping(40, verbose=False), lgb.log_evaluation(0)],
     )
 
-    pred_real = np.expm1(model.predict(va[FEATURE_COLS]))
-    pred_real = np.clip(pred_real, 0, None)
-    mae = mean_absolute_error(y_va_real, pred_real)
-    medae = median_absolute_error(y_va_real, pred_real)
+    pred_real = np.expm1(model.predict(va[FEATURE_COLS])) #Converts predictions back from log scale to real minutes.
+    pred_real = np.clip(pred_real, 0, None) #Prevents the model from producing impossible negative clearance times.
+    mae = mean_absolute_error(y_va_real, pred_real) #Average prediction error measured in minutes
+    medae = median_absolute_error(y_va_real, pred_real) #Typical prediction error after ignoring a few extreme incidents.
     log(f"duration: val MAE={mae:.1f} min  median-AE={medae:.1f} min")
 
     model_path = resolve(cfg["paths"]["duration_model"])
@@ -92,7 +70,7 @@ def train(cfg: dict | None = None) -> dict:
     _merge_metrics(cfg, metrics)
     return metrics
 
-
+#Merges the newly generated model metrics into metrics.json without deleting the existing ones.
 def _merge_metrics(cfg: dict, new: dict) -> None:
     path = resolve(cfg["paths"]["metrics"])
     data = json.loads(path.read_text()) if path.exists() else {}

@@ -1,5 +1,6 @@
 {
   "python.analysis.extraPaths": [
-    "./clearpath-os-dist"
+    "./clearpath-os-dist",
+    "./clearpath-backend/clearpath-os-dist"
   ]
 }
