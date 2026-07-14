@@ -24,6 +24,7 @@ def _can_expand(state: PlanState, settings: Any) -> bool:
     current_count = state.supervisor.retry_count
     return current_count < max_attempts
 
+#When expansion is triggered, the Supervisor increases the search radius and clears the old routes so that the Spatial Agent recalculates a fresh plan
 def _build_expanded_spatial(
     state: PlanState,
     settings: Any,
@@ -71,7 +72,7 @@ def _build_approval_decision(state: PlanState) -> SupervisorDecision:
         retry_count=state.supervisor.retry_count,
         expansion_applied=False,
     )
-
+#for monitoring n debugging
 def _log_supervisor_decision(
     plan_id: str,
     decision: str,
@@ -99,6 +100,7 @@ def _log_supervisor_decision(
             },
         )
 
+#main function
 class SupervisorAgent:
 
     def __init__(self, settings: Any) -> None:
@@ -115,7 +117,7 @@ class SupervisorAgent:
                 expansion_applied=False,
             ))
 
-        # BRANCH 1: Feasible → Approve
+        # BRANCH 1:everything is good ->Approve , workflow=complete
         if _is_plan_feasible(state):
             decision = _build_approval_decision(state)
             _log_supervisor_decision(
@@ -126,7 +128,7 @@ class SupervisorAgent:
             )
             return state.advance(supervisor=decision, stage="complete")
 
-        # BRANCH 2: Infeasible but expandable → Expand
+        # BRANCH 1:plan failed ->retry ->reset routes, self healing loop, stage =Expand
         if _can_expand(state, self.settings):
             decision = _build_expansion_decision(state)
             expanded_spatial = _build_expanded_spatial(state, self.settings)
@@ -142,7 +144,7 @@ class SupervisorAgent:
                 stage="spatial",
             )
 
-        # BRANCH 3: Infeasible and max attempts reached → Escalate
+        # BRANCH 3: multiple retries ->no solution , escalate for human command , stage=Failed
         max_attempts = self.settings.supervisor.max_expansion_attempts
         reason = (
             f"Max expansion attempts ({max_attempts}) reached. "

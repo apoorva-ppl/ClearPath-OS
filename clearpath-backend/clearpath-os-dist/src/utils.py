@@ -1,7 +1,3 @@
-"""
-Shared helpers used across the pipeline.
-Kept tiny and dependency-light on purpose.
-"""
 from __future__ import annotations
 
 import math

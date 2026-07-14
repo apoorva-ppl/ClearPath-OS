@@ -1,30 +1,4 @@
-"""
-route_diversion.py  —  Stage 6.
 
-IN : - incident coords (lat, lng) + a buffer radius (m)
-     - a base road graph (built once from incident coordinates as a proxy grid)
-OUT: {"affected_edges": [...], "buffer_radius_m": float,
-      "diversion_path": [[lat,lng],...] | None,
-      "baseline_path":  [[lat,lng],...] | None}
-
-Task type
----------
-GRAPH SHORTEST-PATH, not ML. We model the area as a NetworkX graph. When an
-incident is logged we inflate the travel cost of every edge whose midpoint lies
-within the buffer ("exclusion zone" / spatial buffer — a haversine radius test,
-which is the same idea as a PostGIS ST_DWithin geofence, just in-process).
-Dijkstra over the inflated graph yields a route that naturally bends around the
-congested zone. Comparing it to the un-inflated shortest path shows the "ripple"
-the incident causes.
-
-The base graph here is synthesised by snapping incident points to a coarse grid
-and connecting neighbouring cells. For a production system you would swap in an
-OSMnx street graph for the city; the interface (build_graph / reroute) stays the
-same. This keeps the 48h build dependency-free while remaining honest about the
-upgrade path.
-
-Run (self-test): python -m src.route_diversion
-"""
 from __future__ import annotations
 
 import networkx as nx
@@ -38,11 +12,6 @@ def _grid_key(lat: float, lng: float, cell_deg: float) -> tuple[int, int]:
 
 
 def build_graph(cfg: dict | None = None) -> nx.Graph:
-    """Build a reusable base road-proxy graph from incident coordinates.
-
-    Nodes = occupied grid cells (lat/lng centroid). Edges connect 8-neighbour
-    cells, weighted by great-circle distance (km). Loaded once and reused.
-    """
     cfg = cfg or load_config()
     # ~400 m at Bengaluru's latitude is ~0.0036 deg; derive from config metres
     cell_deg = cfg["diversion"]["graph_grid_m"] / 111_000.0
@@ -102,11 +71,6 @@ def reroute(G: nx.Graph, incident_latlng: tuple[float, float],
             dest_latlng: tuple[float, float] | None = None,
             radius_m: float | None = None,
             cfg: dict | None = None) -> dict:
-    """Inflate the buffer around an incident and compute a diversion route.
-
-    If origin/dest aren't given, we pick two nodes on opposite sides of the
-    incident so the demo always has a meaningful path to bend.
-    """
     cfg = cfg or load_config()
     d = cfg["diversion"]
     radius_m = radius_m or d["buffer_radius_m"]

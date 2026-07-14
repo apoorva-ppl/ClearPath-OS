@@ -1,29 +1,4 @@
-"""
-optimize_resources.py  —  Stage 5.
 
-IN : - list of active incidents, each with predicted severity + coords
-       [{"id","lat","lng","severity","requires_road_closure"}, ...]
-     - station roster (synthesised from the clean data's police_station column)
-       [{"station","lat","lng","capacity"}, ...]
-OUT: {"assignments":[{incident_id, station, officers, distance_km}],
-      "barricades":{incident_id: count},
-      "uncovered":[incident_id,...], "total_distance_km": float, "feasible": bool}
-
-Task type
----------
-CONSTRAINED OPTIMISATION, not ML. Police stations are SUPPLY nodes (officer
-capacity); incidents are DEMAND nodes (officers needed, by severity). Edge cost
-= station->incident distance. We minimise total officer-distance subject to
-capacity, using OR-Tools min-cost flow. A greedy nearest-station fallback runs
-if OR-Tools is unavailable or the graph is degenerate — it gives near-identical
-output for demo scale.
-
-We optimise rather than imitate historical deployments on purpose: there's no
-ground truth that past gut-feel placements were optimal, and the goal is to
-improve on them.
-
-Run (self-test): python -m src.optimize_resources
-"""
 from __future__ import annotations
 
 from .utils import load_config, haversine_km, log
@@ -63,7 +38,7 @@ def allocate(incidents: list[dict], stations: list[dict],
     return result
 
 
-# ---------------------------------------------------------------- OR-Tools ----
+# OR Tools
 def _solve_min_cost_flow(incidents, stations, cfg, max_km) -> dict:
     from ortools.graph.python import min_cost_flow
 
@@ -121,7 +96,7 @@ def _solve_min_cost_flow(incidents, stations, cfg, max_km) -> dict:
             "total_distance_km": round(total_km, 2)}
 
 
-# ----------------------------------------------------------------- greedy -----
+# greedy algo
 def _solve_greedy(incidents, stations, cfg, max_km) -> dict:
     cap = {st["station"]: st["capacity"] for st in stations}
     assignments, uncovered = [], []

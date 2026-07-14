@@ -1,14 +1,3 @@
-"""
-run_pipeline.py  —  build everything from the raw CSV in one command.
-
-Runs every offline stage in dependency order:
-    clean -> targets -> features -> train_severity -> train_duration -> after_action
-
-After this completes you have trained models in models/ and can launch the app:
-    streamlit run app/demo.py
-
-Run:  python run_pipeline.py
-"""
 from __future__ import annotations
 
 from src.clean import clean

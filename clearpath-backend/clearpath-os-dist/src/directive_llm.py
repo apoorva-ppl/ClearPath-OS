@@ -1,20 +1,3 @@
-"""
-directive_llm.py  —  Stage 8 (presentation layer).
-
-IN : a structured plan dict from pipeline.py
-       {"incident": {...}, "severity": "...", "duration": {...},
-        "allocation": {...}, "diversion": {...}}
-OUT: - directive text (str)
-     - a PDF written to the given path (default models/directive.pdf)
-
-The LLM ONLY formats the already-computed plan into official prose. It performs
-no reasoning, optimisation, or routing — those are done deterministically
-upstream. This keeps the system trustworthy: the numbers come from the optimiser
-and models, the LLM just renders the directive. If no API key is present, a
-clean template fallback produces the same document offline.
-
-Run (self-test): python -m src.directive_llm
-"""
 from __future__ import annotations
 
 import os

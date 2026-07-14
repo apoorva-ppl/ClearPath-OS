@@ -5,12 +5,10 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field
 
 Waypoint = tuple[float, float]
-"""Tuple of (latitude, longitude) in WGS-84."""
-
 StationMap = dict[str, int]
-"""Mapping of station_id to officer_count."""
 
 
+#input coming frm frontend(lat,lng,cause,priority)
 class IncidentInput(BaseModel):
 
     model_config = ConfigDict(frozen=True)
@@ -34,7 +32,7 @@ class IncidentInput(BaseModel):
     start_datetime: str | None = Field(
         default=None, description="ISO-8601 incident start timestamp."
     )
-
+#ouput of triage agent(severity,duration,closure property)
 class TriageOutput(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -52,7 +50,7 @@ class TriageOutput(BaseModel):
         description="LightGBM artifact version for audit trail.",
     )
 
-
+#output of spatial agent(route,diversion route,buffer radius)
 class SpatialOutput(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -94,7 +92,7 @@ class SpatialOutput(BaseModel):
         ),
     )
 
-
+#output of logistic agent(officer allocation,barricades,feasibility)
 class LogisticsOutput(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -108,7 +106,7 @@ class LogisticsOutput(BaseModel):
         default="UNKNOWN", description="Raw OR-Tools solver status code."
     )
 
-
+#output of supervisor agent(retry,escalate,expand)
 class SupervisorDecision(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -126,7 +124,7 @@ class SupervisorDecision(BaseModel):
         description="True if this state used an expanded buffer radius.",
     )
 
-
+#output of directive agent(sms,tweet,dispatch script)
 class DirectiveOutput(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -136,7 +134,8 @@ class DirectiveOutput(BaseModel):
     dispatch_audio_url: str = Field(description="URL to synthesized dispatch audio.")
 
 
-
+#master object(incident+triage+spatial+logistic+supervisor+directive)
+#state -> tracks where the workflow currently is
 class PlanState(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -160,11 +159,13 @@ class PlanState(BaseModel):
         default="init",
         description="Current pipeline stage (SSE progress signal).",
     )
-
+   #instead of changing existing object it creates a new copy with updates
+   #we create new i=obj cuz the agents are immutable
     def advance(self, **updates: Any) -> "PlanState":
    
         return self.model_copy(update=updates)
-
+#global state :- stores entire city info not just one incident
+#stores(incident+active incident)
 class CityState(BaseModel):
 
 
@@ -179,7 +180,8 @@ class CityState(BaseModel):
         description="Mapping of incident_id to incident details and assigned resources.",
     )
 
-
+#stores heavy objects(lightGBM model , NetworkX graph)
+#loaded once ,not on each request (performace upgrade)
 class ModelArtifacts(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
