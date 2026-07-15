@@ -138,14 +138,20 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-#middleware(GZIp)
+#middleware(GZip)
 #compresses responses for faster network transfer
 settings = get_settings()
 app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["GET", "POST"],
+    allow_origins=[
+        "https://clear-path-os.vercel.app",
+        "https://clear-path-hnvi346v1-apoorva-pandeys-projects-14145643.vercel.app",
+        "http://localhost:3000",
+        "*"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
