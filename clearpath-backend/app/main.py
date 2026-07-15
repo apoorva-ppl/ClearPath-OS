@@ -141,7 +141,6 @@ app = FastAPI(
 #middleware(GZip)
 #compresses responses for faster network transfer
 settings = get_settings()
-app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -149,6 +148,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # Mount static files for synthesized dispatch audio
 audio_dir_path = Path(settings.audio_dir)
