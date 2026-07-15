@@ -1,17 +1,18 @@
+#spatial agent uses these settings
 spatial:
   grid_resolution_m: 400
-  base_buffer_radius_m: 800
-  weight_inflation_factor: 8.0
+  base_buffer_radius_m: 800 #congestion radius
+  weight_inflation_factor: 8.0 #makes congested roads 8x more expensive. dijikstra avoids then
 
 logistics:
-  max_station_capacity: 12
-  max_dispatch_distance_km: 15.0
+  max_station_capacity: 12 #max officer a station can dispatch
+  max_dispatch_distance_km: 15.0 #only station withing this region is considered
 
 supervisor:
-  max_expansion_attempts: 4
-  radius_expansion_multiplier: 1.5
+  max_expansion_attempts: 4 #4 attempts to retry(expand), until escalation to human command
+  radius_expansion_multiplier: 1.5 #expansion of 1.5x every try
 
-manpower:
+manpower: #severity directly proportional to resources
   low:
     officers: 1
     barricades: 0
@@ -22,7 +23,7 @@ manpower:
     officers: 6
     barricades: 8
 
-barricade:
+barricade: #for budget calualtions in (GOD MODE -simulate page frontend)
   cost_per_unit_per_hour: 250.0
   max_budget_per_incident: 10000.0
   model_dir: "models"

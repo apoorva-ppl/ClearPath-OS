@@ -16,45 +16,17 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# ════════════════════════════════════════════════════════════════
-# RISK GRID CONFIGURATION
-# (Documented constants — the bounding box must be configured somewhere;
-#  these are not invented data values, just the scan boundary.)
-# ════════════════════════════════════════════════════════════════
-
 RISK_GRID_LAT_MIN = 12.85
 RISK_GRID_LAT_MAX = 13.15
 RISK_GRID_LNG_MIN = 77.45
 RISK_GRID_LNG_MAX = 77.78
-RISK_GRID_SIZE = 6  # 6x6 = 36 cells
-
-# Default profile for a synthetic "what if" grid cell — these are the
-# single most frequent real values observed in features.parquet
-# (event_cause: 4886/~9000 rows, event_type: 7692/~9000 rows,
-#  corridor: 3084/~9000 rows). NOT invented; empirically the mode.
+RISK_GRID_SIZE = 6  
 RISK_GRID_DEFAULT_EVENT_CAUSE = "vehicle_breakdown"
 RISK_GRID_DEFAULT_EVENT_TYPE = "unplanned"
 RISK_GRID_DEFAULT_CORRIDOR = "Non-corridor"
 
 
 def _score_risk_grid(artifacts: Any) -> list[dict]:
-    """
-    Score closure-probability risk across a synthetic grid covering
-    Bengaluru, using the real severity_model and the current real
-    timestamp (hour/dow/month/is_weekend are never faked).
-
-    Each grid cell uses the empirically most-common event_cause/
-    event_type/corridor from training data as a neutral baseline
-    profile, since a synthetic point has no real incident context.
-    corridor_recent_count is correctly 0 — there is no real recent
-    history at a synthetic coordinate.
-
-    Args:
-        artifacts: ModelArtifacts with severity_model and metrics.
-
-    Returns:
-        List of 36 dicts: {lat, lng, closure_prob}, one per grid cell.
-    """
     import numpy as np
 
     now = datetime.utcnow()
@@ -92,9 +64,6 @@ def _score_risk_grid(artifacts: Any) -> list[dict]:
         for i in range(len(coords))
     ]
 
-
-# Feature columns used by the ML models (in pipeline order)
-# These columns are already encoded in features.parquet — no re-encoding needed
 FEATURE_COLS = [
     "event_cause",
     "event_type",
@@ -110,12 +79,6 @@ FEATURE_COLS = [
 
 
 def _severity_tier(closure_prob: float, decision_threshold: float = 0.5) -> str:
-    """
-    Derive severity tier from closure probability.
-    
-    Uses the decision_threshold from model metrics (default 0.5).
-    High >= threshold, Medium [0.3, threshold), Low < 0.3.
-    """
     if closure_prob >= decision_threshold:
         return "High"
     elif closure_prob >= 0.3:
@@ -134,18 +97,6 @@ def _duration_display(predicted_minutes: float) -> str:
 
 @router.get("/incidents")
 async def get_incidents(artifacts: ArtifactsDep):
-    """
-    Returns the most recent 150 incidents with ML-predicted severity.
-    Feeds the Deck.gl heatmap and scatter layer on the frontend map.
-
-    Steps:
-    1. Read features.parquet (already has LightGBM-encoded features,
-       plus id, event_cause, corridor, start_datetime, latitude, longitude)
-    2. Sort by start_datetime descending, take last 150 rows
-    3. Run batch inference on the 10 feature columns
-    4. Derive severity and duration display strings
-    5. Return list of incident objects for the map
-    """
     try:
         data_dir = Path(get_settings().data_dir)
         features_path = data_dir / "features.parquet"
@@ -167,9 +118,6 @@ async def get_incidents(artifacts: ArtifactsDep):
         if len(merged_df) == 0:
             return []
 
-        # Build feature matrix from the 10 pre-encoded columns
-   # Build feature DataFrame, keeping categoricals as pandas 'category'
-        # dtype (LightGBM's native categorical handling — not label-encoded floats)
         CATEGORICAL_COLS = ["event_cause", "event_type", "corridor"]
 
         feature_df = merged_df[FEATURE_COLS].copy()
@@ -228,19 +176,6 @@ async def get_incidents(artifacts: ArtifactsDep):
 
 @router.get("/after-action")
 async def get_after_action(artifacts: ArtifactsDep):
-    """
-    Returns after-action review comparing ML-predicted clearance time
-    vs actual clearance time on closed incidents.
-    
-    Steps:
-    1. Read clean.parquet and filter to closed incidents only
-    2. Compute actual clearance time in minutes
-    3. Join with features.parquet to get encoded features for inference
-    4. Run duration model batch inference
-    5. Convert log-space predictions back to minutes using expm1
-    6. Compute absolute errors
-    7. Return summary stats and top 200 errors for operational review
-    """
     try:
         data_dir = Path(get_settings().data_dir)
         clean_path = data_dir / "clean.parquet"
@@ -282,9 +217,7 @@ async def get_after_action(artifacts: ArtifactsDep):
                 },
                 "incidents": [],
             }
-
-        # Join with features.parquet on id to get encoded features
-        # Use suffixes to avoid duplicate column names (closed_df already has event_cause, corridor)
+        
         merged_df = closed_df.merge(
             features_df[FEATURE_COLS + ["id"]], 
             on="id", 
@@ -305,8 +238,6 @@ async def get_after_action(artifacts: ArtifactsDep):
                 "incidents": [],
             }
 
-        # Build feature DataFrame, keeping categoricals as pandas 'category'
-        # dtype (LightGBM's native categorical handling — not label-encoded floats)
         CATEGORICAL_COLS = ["event_cause", "event_type", "corridor"]
 
         feature_df = merged_df[FEATURE_COLS].copy()
@@ -379,16 +310,6 @@ async def get_after_action(artifacts: ArtifactsDep):
 
 @router.get("/metrics")
 async def get_metrics(artifacts: ArtifactsDep):
-    """
-    Returns model card data from artifacts.metrics.
-    
-    No computation — simply returns the metrics dict that was loaded
-    from models/metrics.json at startup. This includes closure model
-    metrics (ROC-AUC, PR-AUC, confusion matrix) and duration model
-    metrics (MAE, median AE).
-    
-    If metrics unavailable, return HTTP 503.
-    """
     if not artifacts.metrics or len(artifacts.metrics) == 0:
         raise HTTPException(
             status_code=503, detail="Metrics not loaded — check models/metrics.json"
@@ -422,19 +343,6 @@ async def geocode(lat: float, lng: float):
     
 @router.get("/stations")
 async def get_stations(artifacts: ArtifactsDep, city_state: CityStateDep):
-    """
-    Returns all 54 police stations with current availability.
-    
-    Merges static station data (from artifacts.station_data loaded at startup)
-    with live availability from city_state. Frontend uses this for station
-    markers on the map.
-    
-    Each station includes:
-    - station_id: unique identifier
-    - lat, lng: geographic coordinates
-    - capacity: max available units
-    - available: current units available (from city_state, or default to 0)
-    """
     try:
         station_data = artifacts.station_data
 
@@ -531,18 +439,6 @@ async def simulate_city(payload: dict):
 
 @router.websocket("/ws/live")
 async def websocket_live(websocket: WebSocket, city_state: CityStateDep, artifacts: ArtifactsDep):
-    """
-    WebSocket endpoint for pushing live city state to the frontend.
-    
-    On connect:
-    1. Send initial {"type": "connected", "active_incidents": count}
-    2. Enter heartbeat loop: every 5 seconds send current state
-       {"type": "heartbeat",
-        "active_incidents": int,
-        "station_availability": {station_id: available_count, ...},
-        "timestamp": ISO datetime string}
-    3. On disconnect, log at INFO level (disconnect is normal)
-    """
     await websocket.accept()
 
     try:
@@ -565,10 +461,6 @@ async def websocket_live(websocket: WebSocket, city_state: CityStateDep, artifac
                 station_id: availability_info.get("available", 0)
                 for station_id, availability_info in city_state.stations.items()
             }
-
-            # Send heartbeat with current city state
-            # Risk grid scan runs every 6th heartbeat (5s * 6 = 30s),
-            # not every heartbeat, to avoid re-scoring 36 cells too often.
             risk_alerts = []
             if heartbeat_count % 6 == 0:
                 grid_scores = await asyncio.to_thread(_score_risk_grid, artifacts)
@@ -592,9 +484,6 @@ async def websocket_live(websocket: WebSocket, city_state: CityStateDep, artifac
         logger.error(f"WebSocket error: {e}")
         await websocket.close(code=1011)
 
-# ════════════════════════════════════════════════════════════════
-# COMPLAINTS — PostgreSQL via SQLAlchemy
-# ════════════════════════════════════════════════════════════════
 import os
 import uuid
 from datetime import datetime

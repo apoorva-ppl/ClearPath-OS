@@ -1,39 +1,3 @@
-# App Lifespan & Middleware
-"""
-FastAPI application entry point for ClearPath OS.
-
-Owns exactly two responsibilities:
-1. Lifespan — load heavy artifacts ONCE at startup
-2. App assembly — register middleware, routers, SSE endpoint
-
-Zero business logic here. No agent calls, inference, or graph construction.
-
-WHY LIFESPAN over @app.on_event("startup"):
-────────────────────────────────────────────
-- on_event deprecated since FastAPI 0.93.
-- lifespan = single context manager, startup/shutdown colocated.
-- Artifacts in app.state, not globals, so tests can override directly.
-
-WHY MODELS LOADED IN LIFESPAN, NOT ENDPOINT:
-──────────────────────────────────────────
-- LightGBM + NetworkX graphml take 800ms-2s to load.
-- Per-request loading = 2s stall before first SSE byte.
-- Lifespan loads once → <10ms endpoint latency to first byte.
-
-WHY SSE OVER WEBSOCKET:
-───────────────────────
-- SSE = strictly server→client. No handshake. HTTP/2 compatible.
-- WebSocket = bidirectional overkill for read-only progress stream.
-- Request-response returns nothing until pipeline finishes (~2s).
-- SSE returns each agent result as it completes — feels instant.
-
-WHY GZIP ON SSE STREAM:
-──────────────────────
-- SSE sends repeated JSON deltas. JSON compresses 70-80%.
-- On 4G: difference between smooth animation and choppy updates.
-- GZip transparent to browser EventSource API.
-"""
-
 import asyncio
 import json
 import logging
@@ -54,42 +18,22 @@ from app.core.state import ModelArtifacts, CityState, IncidentInput
 from app.core.generator import stream_incident_plan
 from app.api.deps import ArtifactsDep, CityStateDep
 
-
-# ════════════════════════════════════════════════════════════════════════════
-# LOGGING SETUP
-# ════════════════════════════════════════════════════════════════════════════
-
+#login setup
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
 )
 log = logging.getLogger("clearpath.main")
 
-
-# ════════════════════════════════════════════════════════════════════════════
-# LIFESPAN CONTEXT MANAGER
-# ════════════════════════════════════════════════════════════════════════════
-
-
+#lifespan:- runs once(loads ml model s, road graph , station data , city data)
+#avoids loading model for every requests 
+#reduces api latency 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """
-    Application lifespan: startup and shutdown.
-
-    Startup (before yield):
-      1. Load artifacts in thread pool (blocking I/O).
-      2. Initialize city state from station data.
-      3. Create audio output directory for synthesized dispatches.
-      4. Store both on app.state for request-scoped access.
-
-    Shutdown (after yield):
-      5. Log graceful shutdown. No explicit cleanup needed
-         (GC handles LightGBM/NetworkX cleanup).
-    """
     settings = get_settings()
     log.info("ClearPath OS starting up...")
 
-    # Load models in thread pool (blocking C++/I/O code)
+
     artifacts = await asyncio.to_thread(_load_artifacts, settings)
     app.state.artifacts = artifacts
     log.info(
@@ -102,12 +46,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         },
     )
 
-    # Initialize city state
     city_state = _init_city_state(artifacts.station_data, settings)
     app.state.city_state = city_state
     log.info("City state initialized", extra={"stations": len(city_state.stations)})
 
-    # Create audio output directory
 # Create audio output directory
     audio_dir = Path(settings.audio_dir)
     if not audio_dir.is_absolute():
@@ -119,42 +61,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     log.info("ClearPath OS shutting down cleanly")
 
-
-# ════════════════════════════════════════════════════════════════════════════
-# LIFESPAN HELPERS
-# ════════════════════════════════════════════════════════════════════════════
-
-
+    # loads all heavy resources(lightGBM model, networkX graph , Station CSV ,metrics)
 def _load_artifacts(settings) -> ModelArtifacts:
-    """
-    Load all ML models, graph, and station data from disk (sync).
-
-    WHY asyncio.to_thread():
-      - LightGBM Booster loading and NetworkX graphml parsing are
-        blocking and CPU/IO bound (C++ code under the hood).
-      - Calling directly in async startup() blocks the event loop.
-      - asyncio.to_thread() runs them in threadpool — event loop
-        stays responsive during startup.
-
-    WHY RuntimeError on missing models:
-      - Missing severity.txt or duration.txt = broken system, not
-        degraded. ML inference is the first agent and non-optional.
-      - Crash fast with a clear message so ops knows what happened.
-
-    WHY warning (not error) on missing graph:
-      - Synthetic grid is valid for demo/dev (no real OSM data).
-      - Fallback allows standalone testing without OSM data.
-      - Production should fail if graph is missing (validate in config).
-
-    Args:
-        settings: Application settings with paths and configs.
-
-    Returns:
-        ModelArtifacts with loaded models, graph, station data.
-
-    Raises:
-        RuntimeError: If severity.txt or duration.txt not found.
-    """
     import lightgbm as lgb
     import networkx as nx
     import pandas as pd
@@ -176,8 +84,7 @@ def _load_artifacts(settings) -> ModelArtifacts:
     severity_model = lgb.Booster(model_file=str(severity_path))
     duration_model = lgb.Booster(model_file=str(duration_path))
 
-    # Load NetworkX graph (optional, synthetic fallback)
-    # road_graph is used consistently throughout — no alias switching
+
     graph_path = model_dir / "bengaluru.graphml"
     if graph_path.exists():
         road_graph = nx.read_graphml(graph_path)
@@ -186,7 +93,6 @@ def _load_artifacts(settings) -> ModelArtifacts:
             "Road graph not found, using synthetic grid",
             extra={"expected": str(graph_path)},
         )
-        # BUG FIX: was `graph = ...` (wrong name), return used `road_graph`
         road_graph = nx.grid_2d_graph(10, 10)
 
     # Load station data and metrics
@@ -197,7 +103,6 @@ def _load_artifacts(settings) -> ModelArtifacts:
     with open(metrics_path) as f:
         metrics = json.load(f)
 
-    # BUG FIX: was road_graph=graph (undefined), now road_graph=road_graph
     return ModelArtifacts(
         severity_model=severity_model,
         duration_model=duration_model,
@@ -207,19 +112,8 @@ def _load_artifacts(settings) -> ModelArtifacts:
     )
 
 
+    # creates live city state(statiosn , avail officers ,active incidents)
 def _init_city_state(station_data, settings) -> CityState:
-    """
-    Initialize CityState from station data (pure function).
-
-    Builds station availability map and initializes empty incident list.
-
-    Args:
-        station_data: pd.DataFrame with columns [station_id, capacity, lat, lng].
-        settings: Application settings with default capacity value.
-
-    Returns:
-        CityState with initialized stations and empty incidents.
-    """
     stations_dict = {}
     for _, row in station_data.iterrows():
         station_id = str(row["station_id"])
@@ -236,12 +130,7 @@ def _init_city_state(station_data, settings) -> CityState:
         stations=stations_dict,
         active_incidents={},
     )
-
-
-# ════════════════════════════════════════════════════════════════════════════
-# FASTAPI APP INITIALIZATION
-# ════════════════════════════════════════════════════════════════════════════
-
+#creates application(lifespan , metadata , versions)
 app = FastAPI(
     title="ClearPath OS — Autonomous Traffic Command Center",
     version="1.0.0",
@@ -249,8 +138,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Middleware registration (order matters in Starlette)
-# GZip before CORS so compression applies to all responses including preflight
+#middleware(GZIp)
+#compresses responses for faster network transfer
 settings = get_settings()
 app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(
@@ -258,7 +147,6 @@ app.add_middleware(
     allow_origins=["*"],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
-    # TODO: restrict origins in production deployment
 )
 
 # Mount static files for synthesized dispatch audio
@@ -267,10 +155,7 @@ if not audio_dir_path.is_absolute():
     audio_dir_path = Path(__file__).parent.parent / audio_dir_path
 app.mount("/audio", StaticFiles(directory=str(audio_dir_path)), name="audio")
 
-# ════════════════════════════════════════════════════════════════════════════
-# ROUTES
-# ════════════════════════════════════════════════════════════════════════════
-
+#routes
 
 @app.get("/health")
 async def health() -> dict[str, str]:
@@ -281,46 +166,17 @@ async def health() -> dict[str, str]:
 async def favicon():
     return Response(status_code=204)
 
+#checks if server is alive 
 @app.post("/api/plan/stream")
 async def plan_stream(
     incident: IncidentInput,
     artifacts: ArtifactsDep,
     city_state: CityStateDep,
 ) -> StreamingResponse:
-    """
-    Stream a disaster response plan via SSE.
-
-    Orchestrates incident through 4-agent pipeline, streaming live
-    updates as each agent completes. Total latency ~2-10s depending
-    on supervisor loop iterations and network conditions.
-
-    WHY StreamingResponse not JSONResponse:
-      - Pipeline takes ~2s. JSONResponse would stall 2s with blank
-        screen. SSE returns each agent result (~200ms intervals) so
-        frontend animates progress immediately.
-
-    WHY X-Accel-Buffering header:
-      - Nginx buffers responses by default. Without this header,
-        nginx holds all SSE chunks until buffer fills, breaking
-        real-time streaming entirely.
-
-    WHY GeneratorExit caught silently:
-      - Client disconnect mid-stream is normal (user closes browser,
-        network flickers). Not an error condition — log at INFO,
-        no traceback.
-
-    Args:
-        incident: Raw incident input (location, cause, priority).
-        artifacts: Preloaded ML models (LightGBM, NetworkX, etc.).
-        city_state: Live city operational state (mutable).
-
-    Returns:
-        StreamingResponse with text/event-stream content type.
-        Each SSE event: data: {"step": "...", ...}\n\n
-    """
     generator = stream_incident_plan(incident, artifacts, city_state)
     wrapped = _sse_wrap(generator)
 
+#main endpoint
     return StreamingResponse(
         wrapped,
         media_type="text/event-stream",
@@ -331,23 +187,11 @@ async def plan_stream(
         },
     )
 
-
+#converts generator output to SSE(server sent events)
+#frontend recieves them n update
 async def _sse_wrap(
     gen: AsyncGenerator[str, None],
 ) -> AsyncGenerator[str, None]:
-    """
-    Wrap a string generator with SSE formatting.
-
-    Each yielded string becomes: data: {string}\n\n
-    Handles client disconnect (GeneratorExit) silently.
-    Re-raises other exceptions after yielding error event.
-
-    Args:
-        gen: Async generator yielding JSON strings from pipeline.
-
-    Yields:
-        SSE-formatted lines ready for browser EventSource consumption.
-    """
     try:
         async for chunk in gen:
             yield f"data: {chunk}\n\n"
@@ -364,17 +208,10 @@ async def _sse_wrap(
         yield f"data: {error_event}\n\n"
         raise
 
-
-# ════════════════════════════════════════════════════════════════════════════
-# ADDITIONAL ROUTES
-# ════════════════════════════════════════════════════════════════════════════
-
+#additional routes
 try:
     from app.api.endpoints import router as api_router
     app.include_router(api_router, prefix="/api")
-    # Serve the frontend map UI as static files — MUST be mounted last,
-    # after all API routes, since a "/" mount with html=True acts as a
-    # catch-all and would otherwise shadow /health, /api/*, etc.
     frontend_dir = Path(__file__).resolve().parent.parent.parent / "frontend"
     frontend_dir.mkdir(parents=True, exist_ok=True)
 
@@ -385,9 +222,7 @@ try:
         log.info("No frontend build found — skipping static mount (frontend served by Vercel)")
 except ImportError:
     log.warning("API endpoints router not found; skipping registration")
-# ════════════════════════════════════════════════════════════════════════════
-# UVICORN ENTRY POINT
-# ════════════════════════════════════════════════════════════════════════════
+
 
 if __name__ == "__main__":
     import uvicorn
