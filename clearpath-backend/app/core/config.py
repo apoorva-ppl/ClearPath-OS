@@ -131,6 +131,10 @@ class Settings(BaseModel):
         default=["*"],
         description="Allowed CORS origins.",
     )
+    database_url: str = Field(
+        default="sqlite:///./complaints.db",
+        description="Database connection string for complaint storage.",
+    )
 
 #reads config.yaml 
 #handles missing file , invalid yaml , returns python dict
@@ -154,8 +158,16 @@ def _load_yaml_config() -> dict:
 @functools.lru_cache(maxsize=1)
 def get_settings() -> Settings:
     raw_config = _load_yaml_config()
-    settings = Settings(**raw_config)
+
+    # Apply env var overrides BEFORE constructing the frozen model —
+    # Settings is frozen=True, so mutating attributes after construction
+    # raises a pydantic ValidationError. Build the dict first instead.
     port_env = os.environ.get("PORT")
     if port_env:
-        settings.port = int(port_env)
-    return settings
+        raw_config["port"] = int(port_env)
+
+    db_url_env = os.environ.get("DATABASE_URL")
+    if db_url_env:
+        raw_config["database_url"] = db_url_env
+
+    return Settings(**raw_config)

@@ -12,6 +12,10 @@ from fastapi.responses import JSONResponse
 from app.api.deps import ArtifactsDep, CityStateDep
 from app.core.config import get_settings
 
+DATABASE_URL = get_settings().database_url
+
+engine = create_engine(DATABASE_URL)
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
