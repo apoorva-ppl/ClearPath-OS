@@ -1,5 +1,6 @@
 const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL || "https://clearpath-os2.onrender.com";
+  process.env.REACT_APP_BACKEND_URL ||
+  "https://clearpath-backend-ebjx.onrender.com";
 export const API = `${BACKEND_URL}/api`;
 export const ASSET_BASE = BACKEND_URL;
 
@@ -21,8 +22,6 @@ export async function reverseGeocode(lat, lng) {
 }
 
 export function wsURL(path) {
-  const base = (
-    BACKEND_URL || "https://clearpath-backend-ebjx.onrender.com"
-  ).replace(/^http/, "ws");
+  const base = BACKEND_URL.replace(/^http/, "ws");
   return `${base}/api${path}`;
 }
