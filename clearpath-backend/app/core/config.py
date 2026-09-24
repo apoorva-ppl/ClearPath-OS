@@ -3,6 +3,7 @@ import yaml
 from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
+#routing settings(grid resolution,edge weight, avg speed)
 class SpatialSettings(BaseModel):
     
     model_config = ConfigDict(frozen=True)
@@ -31,7 +32,7 @@ class SpatialSettings(BaseModel):
         ),
     )
 
-
+#stores logistic constraints(station capacity, max dispatch distance)
 class LogisticsSettings(BaseModel):
 
     model_config = ConfigDict(frozen=True)
@@ -47,7 +48,7 @@ class LogisticsSettings(BaseModel):
         description="Maximum dispatch distance in km."
     )
 
-
+#stores self healing limits(max retries , expansion factor)
 class SupervisorSettings(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -62,7 +63,7 @@ class SupervisorSettings(BaseModel):
         description="Geometric expansion factor."
     )
 
-
+#maps severity -> resources(high severity =more officers)
 class ManpowerAllocation(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -77,7 +78,7 @@ class ManpowerMatrix(BaseModel):
     medium: ManpowerAllocation
     high: ManpowerAllocation
 
-
+#for deployement budget(for cost estimations)
 class BarricadeCosts(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -90,7 +91,7 @@ class BarricadeCosts(BaseModel):
         description="Max budget per incident."
     )
 
-
+#Combines all configurations into one object shared across the system.
 class Settings(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -130,7 +131,8 @@ class Settings(BaseModel):
         description="Allowed CORS origins.",
     )
 
-
+#reads config.yaml 
+#handles missing file , invalid yaml , returns python dict
 def _load_yaml_config() -> dict:
     config_path = Path(__file__).parent.parent.parent / "config.yaml"
 
@@ -147,7 +149,7 @@ def _load_yaml_config() -> dict:
             f"config.yaml is malformed at {config_path}: {e}"
         ) from e
 
-
+#config loads once n is reused throught the application
 @functools.lru_cache(maxsize=1)
 def get_settings() -> Settings:
     raw_config = _load_yaml_config()

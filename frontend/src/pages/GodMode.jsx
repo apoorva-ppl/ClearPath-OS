@@ -335,7 +335,7 @@ export default function GodMode() {
         preferCanvas
       >
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?api_key=cb1_3wg4_1_37c3ca05cefd8c20b887d760"
           attribution='&copy; <a href="https://carto.com">CARTO</a>'
         />
         <MapClickCatcher

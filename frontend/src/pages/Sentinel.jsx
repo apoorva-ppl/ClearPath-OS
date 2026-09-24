@@ -169,7 +169,7 @@ export default function Sentinel() {
                 preferCanvas
                 attributionControl={false}
               >
-                <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png" />
+                <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png?api_key=cb1_3wg4_1_37c3ca05cefd8c20b887d760" />
                 {reports.map((r) => (
                   <CircleMarker
                     key={r.id}
