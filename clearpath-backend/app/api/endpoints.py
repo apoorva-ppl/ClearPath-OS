@@ -14,7 +14,7 @@ from app.core.config import get_settings
 
 DATABASE_URL = get_settings().database_url
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 logger = logging.getLogger(__name__)
 
