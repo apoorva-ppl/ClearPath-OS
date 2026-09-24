@@ -1,6 +1,5 @@
 const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL ||
-  "https://clearpath-backend-ebjx.onrender.com";
+  import.meta.env.VITE_BACKEND_URL || "https://clearpath-os2.onrender.com";
 export const API = `${BACKEND_URL}/api`;
 export const ASSET_BASE = BACKEND_URL;
 
