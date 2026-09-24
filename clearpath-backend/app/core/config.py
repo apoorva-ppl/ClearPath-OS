@@ -1,3 +1,4 @@
+import os
 import functools
 import yaml
 from pathlib import Path
@@ -153,4 +154,8 @@ def _load_yaml_config() -> dict:
 @functools.lru_cache(maxsize=1)
 def get_settings() -> Settings:
     raw_config = _load_yaml_config()
-    return Settings(**raw_config)
+    settings = Settings(**raw_config)
+    port_env = os.environ.get("PORT")
+    if port_env:
+        settings.port = int(port_env)
+    return settings
