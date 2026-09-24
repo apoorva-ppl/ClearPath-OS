@@ -335,11 +335,9 @@ export default function GodMode() {
         preferCanvas
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          subdomains="abc"
+          url={`https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=${process.env.REACT_APP_CARTO_KEY}`}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           maxZoom={19}
-          className="dark-tiles"
         />
         <MapClickCatcher
           onClick={handleMapClick}
@@ -1152,7 +1150,6 @@ export default function GodMode() {
       )}
 
       <style>{`
-        .dark-tiles { filter: invert(1) hue-rotate(180deg) brightness(0.8) contrast(0.9) saturate(0.5); }
         .pulse-high { animation: pulseHigh 1.8s ease-in-out infinite; }
         @keyframes pulseHigh { 0%,100% { stroke-opacity: 1; } 50% { stroke-opacity: 0.4; } }
         .pulse-buffer { animation: pulseBuf 2.4s ease-in-out infinite; }
