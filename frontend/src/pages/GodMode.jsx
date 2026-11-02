@@ -335,7 +335,8 @@ export default function GodMode() {
         preferCanvas
       >
         <TileLayer
-          url={`https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=${process.env.REACT_APP_CARTO_KEY}`}
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          subdomains="abcd"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           maxZoom={19}
         />
