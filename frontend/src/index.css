@@ -510,8 +510,9 @@ select:focus {
 .leaflet-container {
   background: #050810 !important;
 }
-.leaflet-tile-pane {
-  filter: brightness(0.5) contrast(0.85) saturate(0.7);
+.dark-osm {
+  filter: invert(1) hue-rotate(180deg) brightness(0.75) contrast(0.9)
+    saturate(0.35);
 }
 .leaflet-control-attribution {
   background: rgba(0, 0, 0, 0.6) !important;
